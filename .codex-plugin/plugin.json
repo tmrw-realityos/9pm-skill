@@ -1,0 +1,14 @@
+{
+  "name": "9pm",
+  "description": "Deploy and manage apps on 9pm.ai with the public 9pm CLI. Use when a user asks to deploy an app, inspect app compatibility, create a hosted app, configure app access, use managed storage, set environment variables or secrets, or delete a 9pm.ai app.",
+  "version": "0.1.0",
+  "homepage": "https://9pm.ai",
+  "license": "MIT",
+  "author": "TMRW Reality OS",
+  "skills": [
+    {
+      "name": "9pm",
+      "path": "skills/9pm/SKILL.md"
+    }
+  ]
+}
