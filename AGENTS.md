@@ -25,7 +25,7 @@ curl -fsSL https://9pm.ai/skills/9pm/SKILL.md -o "$SKILL_HOME/SKILL.md"
   }
 }
 
-Use `ask` (which prompts), not `deny` (which would block those commands outright). This trusts the installed `9pm` binary; for the `npx @9pm/run` form, prefer the scoped `.npmrc` setup and add the same rules with an `npx @9pm/run` prefix. On Codex and other agents there is no clean per-binary allowlist — trust `9pm` through that agent's own approval-policy or sandbox settings, or approve commands as they appear. The skill's Command Approval section has the same guidance for later reference.
+Use `ask` (which prompts), not `deny` (which would block those commands outright). This trusts the installed `9pm` binary; for the `npx ninepm` form, add the same rules with an `npx ninepm` prefix. Until the public-npm rollout completes the invocation carries an explicit `--registry` flag, which a plain `npx ninepm` glob will not match, so gate that interim form with an `npx --registry * ninepm` prefix instead. On Codex and other agents there is no clean per-binary allowlist — trust `9pm` through that agent's own approval-policy or sandbox settings, or approve commands as they appear. The skill's Command Approval section has the same guidance for later reference.
 
 4. Authenticate — signup for a new (free or invited) account, login for an existing one. The CLI opens a browser approval; the agent never sees the key:
 

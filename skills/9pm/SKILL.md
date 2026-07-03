@@ -77,15 +77,13 @@ Upgrade with:
 curl -fsSL https://9pm.ai/install.sh | bash
 ```
 
-The CLI is also published to 9pm's own npm registry, so `npx` works once you point npm at it (the package is not on public npmjs yet). Pass the registry, or set it once in a scoped `.npmrc`:
+The CLI is also published as the npm package `ninepm` on 9pm's own npm registry, so `npx` works once you point npm at it (the public-npmjs rollout is in progress; until it completes, pass the registry explicitly):
 
 ```sh
-npx --registry https://9pm.ai/npm @9pm/run <args>
-# or, to avoid repeating it:
-echo '@9pm:registry=https://9pm.ai/npm' >> ~/.npmrc && npx @9pm/run <args>
+npx --registry https://9pm.ai/npm ninepm <args>
 ```
 
-`install.sh` remains the primary path; the npm channel is additive. Reads are anonymous; no token needed to install.
+Once the public-npm rollout completes, plain `npx ninepm <args>` works with no registry flag. `install.sh` remains the primary path; the npm channel is additive. Reads are anonymous; no token needed to install.
 
 ## Sandboxed Environments
 
@@ -93,7 +91,7 @@ If you run inside a sandbox with restricted network egress (the Claude cloud san
 
 Hosts to trust:
 
-- `9pm.ai` - hosted `install.sh` and the CLI tarball/manifest under `/downloads/9pm/*`. (Required today only for the hosted installer; once `@9pm/run` ships on npm - see #69 - only `api.9pm.ai` is needed.)
+- `9pm.ai` - hosted `install.sh` and the CLI tarball/manifest under `/downloads/9pm/*`. (Required today only for the hosted installer; once `ninepm` ships on npm - see #69 - only `api.9pm.ai` is needed.)
 - `api.9pm.ai` - the deploy API the CLI calls (`9pm login`, `deploy`, `apps`, ...).
 - Container deploys (`--runtime container`) build the image **locally**, so they pull base layers from Docker Hub (`registry-1.docker.io` / `auth.docker.io` are on the Trusted default; the layer-blob CDN may need adding). The built image is then **uploaded to `api.9pm.ai`** (the `/v1/container-uploads/<id>/image` PUT - same host as above). The push to the managed image registry happens **server-side**, so no registry host needs allowlisting in the sandbox.
 
@@ -128,7 +126,7 @@ On Claude Code, add this to `.claude/settings.local.json` in the user's project,
 
 `ask` rules take precedence over `allow`, so the routine surface (`deploy`, `apps`, `doctor`, `logs`, `whoami`, `env ls`, `files` reads, ...) runs hands-off while every destructive or access-changing command still prompts first: `9pm delete` (destroys an app), `9pm deployments rm`/`deployments delete` (removes a deployment), `9pm files delete`, `9pm env rm`, and any `9pm access` change. Use `ask`, not `deny` - `deny` would block those commands outright instead of prompting for them.
 
-This trusts the installed `9pm` binary. If you run the `npx @9pm/run` form instead, prefer the scoped `.npmrc` setup (above) so the command stays a plain `npx @9pm/run ...`, then add the same rules with an `npx @9pm/run` prefix (including `Bash(npx @9pm/run delete *)` under `ask`).
+This trusts the installed `9pm` binary. If you run the `npx ninepm` form instead, add the same rules with an `npx ninepm` prefix (including `Bash(npx ninepm delete *)` under `ask`). Note that until the public-npm rollout completes the invocation carries an explicit registry flag (`npx --registry https://9pm.ai/npm ninepm ...`), which a plain `Bash(npx ninepm delete *)` glob will not match - gate that interim form with `Bash(npx --registry * ninepm delete *)` (and the same prefix for the other destructive subcommands). Once plain `npx ninepm ...` works, the `npx ninepm`-prefixed rules match directly.
 
 On Codex and other agents there is no clean per-binary allowlist - trust `9pm` through that agent's own approval-policy or sandbox settings, or approve commands as they appear.
 
