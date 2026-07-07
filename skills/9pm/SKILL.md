@@ -16,6 +16,7 @@ Product guidance for working with 9pm.ai after the CLI is installed and the user
 - Never refactor an app — especially its storage layer — to fit 9pm.ai without explicit user approval. If an app already has a working database, attach storage to it (see Persistence) rather than rewriting it.
 - Run the app's existing build/test checks before deploying when available.
 - Run `9pm deploy <dir> --check` before the real deploy when supported.
+- `9pm deploy` runs the project's own build locally — for framework apps that means `npm install` (and its lifecycle scripts), the framework build, or `docker build` execute on your machine. Only deploy directories you trust, the same way you'd trust running that project's build.
 - Report the deployed URL and any follow-up risks clearly.
 
 ## Authentication
