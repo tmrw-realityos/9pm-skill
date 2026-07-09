@@ -6,10 +6,15 @@ Keep it agent-led: the user may be nontechnical, so run the commands yourself wh
 
 ## Setup
 
-1. Install the CLI. If you cannot run shell commands, give the user the exact command instead of working around it by asking for a key:
+1. Get the CLI - two ways, same CLI. Simplest and sandbox-friendly is `npx` (the public npm registry is on the Trusted allowlist, so fetching the CLI needs no 9pm host trusted):
+
+npx ninepm <args>
+
+Or install a persistent `9pm` binary via the hosted script (in a sandbox this needs 9pm.ai trusted):
 
 curl -fsSL https://9pm.ai/install.sh | bash
 
+The rest of this guide writes `9pm ...`; if you use npx, run `npx ninepm ...` instead. If you cannot run shell commands, give the user the exact command rather than working around it by asking for a key.
 2. Install the skill and follow it as your operating guide. Codex loads it automatically; on Claude Code, Cursor, or any other agent, read this file now and treat it as your instructions:
 
 SKILL_HOME="${CODEX_HOME:-$HOME/.codex}/skills/9pm"
@@ -25,7 +30,7 @@ curl -fsSL https://9pm.ai/skills/9pm/SKILL.md -o "$SKILL_HOME/SKILL.md"
   }
 }
 
-Use `ask` (which prompts), not `deny` (which would block those commands outright). This trusts the installed `9pm` binary; for the `npx ninepm` form, add the same rules with an `npx ninepm` prefix. Until the public-npm rollout completes the invocation carries an explicit `--registry` flag, which a plain `npx ninepm` glob will not match, so gate that interim form with an `npx --registry * ninepm` prefix instead. On Codex and other agents there is no clean per-binary allowlist — trust `9pm` through that agent's own approval-policy or sandbox settings, or approve commands as they appear. The skill's Command Approval section has the same guidance for later reference.
+Use `ask` (which prompts), not `deny` (which would block those commands outright). This trusts the installed `9pm` binary; for the `npx ninepm` form, add the same rules with an `npx ninepm` prefix (they match `npx ninepm <args>` directly). On Codex and other agents there is no clean per-binary allowlist — trust `9pm` through that agent's own approval-policy or sandbox settings, or approve commands as they appear. The skill's Command Approval section has the same guidance for later reference.
 
 4. Authenticate — signup for a new (free or invited) account, login for an existing one. The CLI opens a browser approval; the agent never sees the key:
 

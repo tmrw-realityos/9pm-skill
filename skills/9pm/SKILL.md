@@ -78,22 +78,24 @@ Upgrade with:
 curl -fsSL https://9pm.ai/install.sh | bash
 ```
 
-The CLI is also published as the npm package `ninepm` on 9pm's own npm registry, so `npx` works once you point npm at it (the public-npmjs rollout is in progress; until it completes, pass the registry explicitly):
+The CLI is also published as the npm package `ninepm` on the public npm registry, so you can run it with `npx` and skip the install step:
 
 ```sh
-npx --registry https://9pm.ai/npm ninepm <args>
+npx ninepm <args>
 ```
 
-Once the public-npm rollout completes, plain `npx ninepm <args>` works with no registry flag. `install.sh` remains the primary path; the npm channel is additive. Reads are anonymous; no token needed to install.
+This is the simplest path in a restricted sandbox: the public npm registry is on the default "Trusted" allowlist, so `npx ninepm` runs without trusting any 9pm host to fetch the CLI (see *Sandboxed Environments*). `install.sh` remains available as an alternative. Reads are anonymous; no token needed to install.
 
 ## Sandboxed Environments
 
-If you run inside a sandbox with restricted network egress (the Claude cloud sandbox, or the Claude Code CLI bash sandbox - both default to a "Trusted" allowlist), install and deploy fail until the relevant hosts are trusted. The first symptom is a refused `curl https://9pm.ai/install.sh`.
+If you run inside a sandbox with restricted network egress (the Claude cloud sandbox, or the Claude Code CLI bash sandbox - both default to a "Trusted" allowlist), some steps fail until the relevant hosts are trusted.
 
-Hosts to trust:
+Get the CLI without touching the allowlist: run it via `npx ninepm <args>`. The public npm registry is on the Trusted default, so this needs no extra trust - unlike `curl https://9pm.ai/install.sh`, which is refused until `9pm.ai` is trusted (a refused `install.sh` fetch is the first symptom of an unset allowlist).
 
-- `9pm.ai` - hosted `install.sh` and the CLI tarball/manifest under `/downloads/9pm/*`. (Required today only for the hosted installer; once `ninepm` ships on npm - see #69 - only `api.9pm.ai` is needed.)
-- `api.9pm.ai` - the deploy API the CLI calls (`9pm login`, `deploy`, `apps`, ...).
+Hosts to trust for deploying:
+
+- `api.9pm.ai` - the deploy API the CLI calls (`9pm login`, `deploy`, `apps`, ...). Required: this is where the CLI reaches the platform, and it is not on the Trusted default.
+- `9pm.ai` - only if you install via `install.sh` instead of `npx ninepm` (it serves the hosted installer + the CLI tarball/manifest under `/downloads/9pm/*`). With `npx ninepm` you can skip trusting it.
 - Container deploys (`--runtime container`) build the image **locally**, so they pull base layers from Docker Hub (`registry-1.docker.io` / `auth.docker.io` are on the Trusted default; the layer-blob CDN may need adding). The built image is then **uploaded to `api.9pm.ai`** (the `/v1/container-uploads/<id>/image` PUT - same host as above). The push to the managed image registry happens **server-side**, so no registry host needs allowlisting in the sandbox.
 
 How you trust them depends on the environment:
@@ -101,7 +103,7 @@ How you trust them depends on the environment:
 - **Claude cloud (claude.ai/code)**: set this in the environment's network settings (the cloud icon), not in any settings file. Choose **Custom** network access and add the hosts in the **Allowed domains** field. The policy is applied when the environment is (re)built, so set it **before** the session - an agent already inside the sandbox cannot change it mid-session, and `~/.claude/settings.json` is not loaded in cloud sessions. See https://code.claude.com/docs/en/claude-code-on-the-web.
 - **Claude Code CLI (local bash sandbox)**: add the hosts to `sandbox.network.allowedDomains` in `.claude/settings.json` (wildcards like `*.9pm.ai` work). See https://code.claude.com/docs/en/sandboxing.
 
-This guidance and the installer are themselves served from `9pm.ai`, so in a sandbox that has not trusted it yet you cannot fetch them from inside - apply the allowlist from outside the sandbox (the cloud environment settings, or your CLI settings) before the first run.
+Apply the allowlist from outside the sandbox (the cloud environment settings, or your CLI settings) before the first run - an agent already inside the sandbox cannot change it mid-session. `npx ninepm` gets you the CLI with no allowlisting, but `api.9pm.ai` still has to be trusted from outside before any deploy.
 
 ## Command Approval
 
@@ -127,7 +129,7 @@ On Claude Code, add this to `.claude/settings.local.json` in the user's project,
 
 `ask` rules take precedence over `allow`, so the routine surface (`deploy`, `apps`, `doctor`, `logs`, `whoami`, `env ls`, `files` reads, ...) runs hands-off while every destructive or access-changing command still prompts first: `9pm delete` (destroys an app), `9pm deployments rm`/`deployments delete` (removes a deployment), `9pm files delete`, `9pm env rm`, and any `9pm access` change. Use `ask`, not `deny` - `deny` would block those commands outright instead of prompting for them.
 
-This trusts the installed `9pm` binary. If you run the `npx ninepm` form instead, add the same rules with an `npx ninepm` prefix (including `Bash(npx ninepm delete *)` under `ask`). Note that until the public-npm rollout completes the invocation carries an explicit registry flag (`npx --registry https://9pm.ai/npm ninepm ...`), which a plain `Bash(npx ninepm delete *)` glob will not match - gate that interim form with `Bash(npx --registry * ninepm delete *)` (and the same prefix for the other destructive subcommands). Once plain `npx ninepm ...` works, the `npx ninepm`-prefixed rules match directly.
+This trusts the installed `9pm` binary. If you run the `npx ninepm` form instead, add the same rules with an `npx ninepm` prefix (including `Bash(npx ninepm delete *)` under `ask`); they match `npx ninepm <args>` directly.
 
 On Codex and other agents there is no clean per-binary allowlist - trust `9pm` through that agent's own approval-policy or sandbox settings, or approve commands as they appear.
 
