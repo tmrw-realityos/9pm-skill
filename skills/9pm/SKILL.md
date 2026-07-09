@@ -105,6 +105,8 @@ How you trust them depends on the environment:
 
 Apply the allowlist from outside the sandbox (the cloud environment settings, or your CLI settings) before the first run - an agent already inside the sandbox cannot change it mid-session. `npx ninepm` gets you the CLI with no allowlisting, but `api.9pm.ai` still has to be trusted from outside before any deploy.
 
+This skill itself is published to a public GitHub mirror (`raw.githubusercontent.com/tmrw-realityos/9pm-skill/main/skills/9pm/SKILL.md`), which a sandbox trusts by default - so fetching the guidance needs no allowlisting even when `9pm.ai` is not trusted.
+
 ## Command Approval
 
 Separate from the network egress above: a coding agent harness may ask the user to approve **every** `9pm` command before it runs, so a single deploy turns into a dozen approval prompts. This is the agent's own command-approval gate, not a 9pm setting - nothing about `9pm` is inherently untrusted, the agent just has no standing rule that it is safe to run. Pre-trust the `9pm` command surface in the agent's permission config so the routine deploy flow runs hands-off, while the one destructive command still asks first.

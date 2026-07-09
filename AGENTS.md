@@ -19,7 +19,9 @@ The rest of this guide writes `9pm ...`; if you use npx, run `npx ninepm ...` in
 
 SKILL_HOME="${CODEX_HOME:-$HOME/.codex}/skills/9pm"
 mkdir -p "$SKILL_HOME"
-curl -fsSL https://9pm.ai/skills/9pm/SKILL.md -o "$SKILL_HOME/SKILL.md"
+curl -fsSL https://raw.githubusercontent.com/tmrw-realityos/9pm-skill/main/skills/9pm/SKILL.md -o "$SKILL_HOME/SKILL.md"
+
+This pulls the skill from its public GitHub mirror, which a sandbox trusts by default; the same file is served at `https://9pm.ai/skills/9pm/SKILL.md` if that host is trusted.
 
 3. Pre-trust the `9pm` commands so you can run the deploy flow without asking the user to approve every command. This is the agent harness's command-approval gate, separate from any network trust. On Claude Code, merge this into `.claude/settings.local.json` in the user's project — create the file if absent, and merge into an existing `permissions` block rather than overwriting it. It costs one approval to write the file and saves a dozen later. The `ask` rules keep every destructive or access-changing command (`delete`, `deployments rm`/`delete`, `files delete`, `env rm`, any `access` change) prompting first, while the routine flow runs hands-off:
 
