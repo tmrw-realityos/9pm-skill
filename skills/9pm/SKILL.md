@@ -75,27 +75,26 @@ Every deployed app has a built-in **Analytics** view in the dashboard (per app, 
 Upgrade with:
 
 ```sh
-curl -fsSL https://9pm.ai/install.sh | bash
+npm i -g ninepm@latest
 ```
 
-The CLI is also published as the npm package `ninepm` on the public npm registry, so you can run it with `npx` and skip the install step:
+The CLI is the npm package `ninepm` on the public npm registry. Run it ad-hoc with `npx ninepm <args>` (no install), or install a persistent `9pm` binary with `npm i -g ninepm`:
 
 ```sh
 npx ninepm <args>
 ```
 
-This is the simplest path in a restricted sandbox: the public npm registry is on the default "Trusted" allowlist, so `npx ninepm` runs without trusting any 9pm host to fetch the CLI (see *Sandboxed Environments*). `install.sh` remains available as an alternative. Reads are anonymous; no token needed to install.
+`npx ninepm` is the simplest path in a restricted sandbox: the public npm registry is on the default "Trusted" allowlist, so it runs without trusting any 9pm host to fetch the CLI (see *Sandboxed Environments*). Reads are anonymous; no token needed to install.
 
 ## Sandboxed Environments
 
 If you run inside a sandbox with restricted network egress (the Claude cloud sandbox, or the Claude Code CLI bash sandbox - both default to a "Trusted" allowlist), some steps fail until the relevant hosts are trusted.
 
-Get the CLI without touching the allowlist: run it via `npx ninepm <args>`. The public npm registry is on the Trusted default, so this needs no extra trust - unlike `curl https://9pm.ai/install.sh`, which is refused until `9pm.ai` is trusted (a refused `install.sh` fetch is the first symptom of an unset allowlist).
+Get the CLI without touching the allowlist: run it via `npx ninepm <args>` (or `npm i -g ninepm` for a persistent binary). The public npm registry is on the Trusted default, so this needs no extra trust.
 
-Hosts to trust for deploying:
+Host to trust for deploying:
 
-- `api.9pm.ai` - the deploy API the CLI calls (`9pm login`, `deploy`, `apps`, ...). Required: this is where the CLI reaches the platform, and it is not on the Trusted default.
-- `9pm.ai` - only if you install via `install.sh` instead of `npx ninepm` (it serves the hosted installer + the CLI tarball/manifest under `/downloads/9pm/*`). With `npx ninepm` you can skip trusting it.
+- `api.9pm.ai` - the deploy API the CLI calls (`9pm login`, `deploy`, `apps`, ...). This is the one host to add: the CLI reaches the platform here, and it is not on the Trusted default. (The CLI comes from public npm and this skill from GitHub - both already Trusted - so no other 9pm host needs allowlisting.)
 - Container deploys (`--runtime container`) build the image **locally**, so they pull base layers from Docker Hub (`registry-1.docker.io` / `auth.docker.io` are on the Trusted default; the layer-blob CDN may need adding). The built image is then **uploaded to `api.9pm.ai`** (the `/v1/container-uploads/<id>/image` PUT - same host as above). The push to the managed image registry happens **server-side**, so no registry host needs allowlisting in the sandbox.
 
 How you trust them depends on the environment:
@@ -361,7 +360,7 @@ Most failures are self-fixable — read the error the CLI prints, then work down
 
 - **Auth / "not signed in" / 401:** run `9pm doctor` (checks the stored credential and reachability), then `9pm whoami` to confirm who you are. If the credential is missing or expired, `9pm login` again.
 - **"Unknown command" or behavior that doesn't match this guide:** suspect an out-of-date CLI. Run `9pm latest`, and upgrade if it's behind (see *Versioning*).
-- **Install or deploy refused before any upload, or `curl https://9pm.ai/install.sh` is refused:** you're in a sandbox with restricted egress. Trust the required hosts (see *Sandboxed Environments*) — this is applied from *outside* the sandbox, before the session.
+- **Deploy refused before any upload (calls to `api.9pm.ai` are blocked):** you're in a sandbox with restricted egress. Trust `api.9pm.ai` (see *Sandboxed Environments*) — applied from *outside* the sandbox, before the session. (`npx ninepm` itself needs no allowlisting.)
 - **Deploy/build failed:** the CLI prints the reason. Common fixes: ensure the build output directory exists and is non-empty; re-run with `9pm deploy <dir> --check` to validate the directory before deploying; for `--runtime container`, confirm the image builds locally and the app listens on `0.0.0.0:$PORT`; if a requested capability (always-on, volume, custom sizing) is rejected, it may not be enabled for this account — drop it or escalate.
 - **`asset_file_too_large`:** a single static file exceeds the 25 MiB per-file limit (see *Supported App Shapes*). This is deterministic — do not retry. Split or externally host the oversized asset (usually a large WASM binary), or deploy the app as a container.
 

@@ -10,9 +10,9 @@ Keep it agent-led: the user may be nontechnical, so run the commands yourself wh
 
 npx ninepm <args>
 
-Or install a persistent `9pm` binary via the hosted script (in a sandbox this needs 9pm.ai trusted):
+Or install a persistent `9pm` binary with npm:
 
-curl -fsSL https://9pm.ai/install.sh | bash
+npm i -g ninepm
 
 The rest of this guide writes `9pm ...`; if you use npx, run `npx ninepm ...` instead. If you cannot run shell commands, give the user the exact command rather than working around it by asking for a key.
 2. Install the skill and follow it as your operating guide. Codex loads it automatically; on Claude Code, Cursor, or any other agent, read this file now and treat it as your instructions:
