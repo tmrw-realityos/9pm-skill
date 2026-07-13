@@ -179,6 +179,14 @@ What you get:
 
 Composing with access modes (see Access): managed accounts work on a `public` app and on `private_otp` / `private_idp` apps. On a private app the visitor is already identified by the access gate, so `ctx.user` is populated with **no second login** and the email-code endpoints aren't used. It cannot be enabled on a `private_service` app — there is no human behind a service token.
 
+Sign-in behavior and edge cases — relevant when the app builds its **own** UI against the endpoints (the hosted page at `/__9pm/auth` already handles all of these):
+
+- **Codes expire after 10 minutes** and are single-use; requesting a new code invalidates the previous one. An expired or wrong code makes `verify` return `400` with code `invalid_code` and a user-ready message ("The code is incorrect or has expired.") — offer a "request a new code" action on this error.
+- **Resend cooldown:** one code per address per 60 seconds. Inside the window `request-code` returns `429` (`rate_limited`). The earlier code is **still valid**, so render this as "check your inbox — your code is on the way", not as a failure. Broader limits also apply (per-address hourly, per-visitor, and per-app caps; all `429`).
+- **Five wrong attempts invalidate the code** — the error stays the same generic `invalid_code` by design.
+- **`request-code` always returns `202 {"ok":true}`**, whether or not the address is known or the email could be delivered — accounts can't be enumerated through this endpoint, so don't treat a 202 as proof of delivery. If someone mistypes a stranger's address, the recipient's email says it can be safely ignored; an account is only created on the first successful `verify`.
+- Surface the `error.message` from `400`/`429` responses directly — they're written for end users.
+
 ## Share-by-link Apps
 
 When one URL equals one private workspace (a shared board, doc, or the todo demo below), the URL itself is the access secret:
