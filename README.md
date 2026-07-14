@@ -14,8 +14,8 @@ managed storage, set environment variables, and more - using the public `9pm` CL
 Pick whichever your agent supports:
 
 ```sh
-# skills registry
-npx skills add tmrw-realityos/9pm-skill
+# skills registry (works for Claude Code, Cursor, Codex, and most other agents)
+npx skills add tmrw-realityos/9pm-skill --skill 9pm -g
 
 # Codex / Cursor: install from this repo's plugin manifests
 #   .codex-plugin/plugin.json
