@@ -190,6 +190,29 @@ Sign-in behavior and edge cases — relevant when the app builds its **own** UI 
 - **`request-code` always returns `202 {"ok":true}`**, whether or not the address is known or the email could be delivered — accounts can't be enumerated through this endpoint, so don't treat a 202 as proof of delivery. If someone mistypes a stranger's address, the recipient's email says it can be safely ignored; an account is only created on the first successful `verify`.
 - Surface the `error.message` from `400`/`429` responses directly — they're written for end users.
 
+### Multi-user patterns
+
+Every multi-user shape below is the same move: tables in the app's own managed database (see Managed SQL), keyed by the stable `ctx.user.id`, on top of the identity 9pm injects. Two rules apply to all of them: every authorization check runs **server-side** in the app, and identity comes only from `ctx.user` / `X-9pm-User` — never from a client-supplied id, email, or role value. On **public** apps the 9pm dashboard already shows the owner how many people have signed up, so don't build a user-count page unless asked; private apps have no dashboard count, so there it's a legitimate feature to build.
+
+**Owner admin area** — "an admin page only I can see":
+
+- Gate owner-only routes on `ctx.user.isOwner`, server-side. No configuration: the owner signs in with their email like anyone else and is recognized.
+- `isOwner` marks exactly one person — the account that deployed the app. For additional admins, keep an app-side roles table and let an `isOwner` session grant the role.
+- Removing a user means deleting or hiding their rows in the app's own tables. It does **not** revoke their sign-in — an existing session stays valid until it expires (up to 7 days). If the user asks for banning or instant lockout, say this plainly, and gate the app's routes on a `banned` flag in the app's tables instead: a banned person may still be signed in, but sees nothing.
+
+**Groups that users create and manage** — travel groups, shared projects, clubs:
+
+- Two tables in the app's database: groups (id, name, owner user id) and memberships (group id, email, nullable user id, role).
+- **Every group-scoped read or write verifies membership of that specific group**: resolve the group id from the request, then check that `ctx.user.id` is the group's owner or an active member before touching its rows. "Signed in" alone is not authorization — skipping this check exposes every group to every account.
+- Members can be added by email before they have ever signed in: store the membership against the **trimmed, lowercased** email, normalize the same way when looking up pending memberships by `ctx.user.email`, then link the stable user id on first sign-in. (On private apps the email arrives with its original casing; only the id is normalized for you — the same person always resolves to the same id.)
+- Invites are shareable links or add-by-email inside the app. 9pm sends no email on the app's behalf — never promise invitation emails; the invited person simply signs in and finds the group waiting.
+
+**Two kinds of users** — teachers/students, hosts/guests:
+
+- A role column on the app's own profile table, plus relationship tables (classes, enrollment). Gate each role's routes server-side by reading the role from the app's tables.
+- How someone becomes the higher role is the app's policy, not the platform's — owner approval from the admin area, an invite code, an open toggle. **Ask the user which they want**; don't invent one.
+- Scope what each role sees by the relationship tables: the lower role only what they're enrolled in, the higher role only their own roster.
+
 ## Share-by-link Apps
 
 When one URL equals one private workspace (a shared board, doc, or the todo demo below), the URL itself is the access secret:
@@ -199,6 +222,7 @@ When one URL equals one private workspace (a shared board, doc, or the todo demo
 - Set `Referrer-Policy: no-referrer` and `Cache-Control: private, no-store` on every workspace response.
 - Do not load third-party assets from the SPA — they can leak the workspace path through the `Referer` header.
 - Tell the user explicitly that the URL is the access secret before deploying.
+- When a workspace needs real identities — named members, an owner, roles — that's the Groups pattern under End-User Accounts: the same isolation, with accounts instead of a secret URL.
 
 ## Deploy Workflow
 
