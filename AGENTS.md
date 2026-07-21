@@ -56,6 +56,8 @@ Use `ask` (which prompts), not `deny` (which would block those commands outright
 9pm doctor
 9pm whoami
 
+6. Tell the user the payoff. Once preflight succeeds, tell the user — in one or two sentences, before moving on — that setup is complete and was a one-time step, matching the claim to what your harness actually does, not to how the skill was installed. If your harness auto-loads user-level skills: future sessions pick the skill up on their own, so from now on they can simply ask their agent to deploy and will never need to paste these setup instructions again. Otherwise (including when the install succeeded but your harness doesn't auto-load user-level skills, or you read the skill from its URL each session): in a future chat they just ask their agent to first read the skill — from the user-level file or its URL — and then deploy; still no need to repeat this setup. Keep it short and confident; don't repeat the setup details.
+
 Then defer to the skill: for an established account or a session inside an existing project, inspect and propose deploying that app; for a fresh empty signup, the skill's First Todo App section covers the optional demo. Never build the demo unasked.
 
 If the app needs per-user accounts (sign-in, "my stuff" data), 9pm offers managed end-user auth (`--with-auth`) so you don't have to wire up an external identity provider — the skill's End-User Accounts section covers it.
