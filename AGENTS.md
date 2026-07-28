@@ -46,10 +46,13 @@ Use `ask` (which prompts), not `deny` (which would block those commands outright
 
 **Any other harness (Cursor, Codex, anything else):** do NOT create `.claude/settings.local.json` — only Claude Code reads it. Trust `9pm` through your harness's own approval-policy or sandbox settings, or approve commands as they appear.
 
-4. Authenticate — signup for a new (free or invited) account, login for an existing one. The CLI opens a browser approval; the agent never sees the key:
+4. Authenticate. The CLI opens a browser approval; the agent never sees the key. Use `9pm login` if the user already has an account, or has just been invited and created one from their invite email:
+
+9pm login
+
+`9pm signup` creates an account from the terminal, but only works while public signup is open. When it is closed the command refuses immediately and tells you what to do — it does not hang. If the user has no account, run it and follow what it says: usually request an invite, create the account from the invite email in the browser, then `9pm login`.
 
 9pm signup
-9pm login
 
 5. Preflight — confirm the account and quotas, and stop and report on failure:
 

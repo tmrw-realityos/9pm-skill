@@ -27,8 +27,8 @@ This chat agent has no secure secret input. Anything pasted into the conversatio
 
 Authentication paths, in order of preference:
 
-1. `9pm signup` for a new account, when public signup or an invite is available. The browser page says invite-only if signup is closed.
-2. `9pm login` for an existing account. Device-code flow; the token is stored in native protected storage. Plaintext file storage is opt-in only when native storage is unavailable. The agent never sees the key.
+1. `9pm login` for an existing account — including one the user just created from an invite email. Device-code flow; the token is stored in native protected storage. Plaintext file storage is opt-in only when native storage is unavailable. The agent never sees the key.
+2. `9pm signup` for a brand-new account, which works only while public signup is open. When it is closed the command refuses immediately with the next step (request an invite, create the account from the invite email, then `9pm login`) — it does not hang waiting for a browser approval that can never happen. An invite link cannot be redeemed through `9pm signup`; the one-time link in the email is the only way to use it.
 3. User-set environment in their own terminal: `export NINEPM_API_KEY=9pm_...`. Warn that the value can land in shell history.
 4. `NINEPM_API_KEY` overrides stored login for CI.
 
