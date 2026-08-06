@@ -122,6 +122,7 @@ Separate from the network egress above: a coding agent harness may ask the user 
       "Bash(9pm deployments rm *)",
       "Bash(9pm deployments delete *)",
       "Bash(9pm files delete *)",
+      "Bash(9pm files share *)",
       "Bash(9pm env rm *)",
       "Bash(9pm access *)"
     ],
@@ -130,7 +131,7 @@ Separate from the network egress above: a coding agent harness may ask the user 
 }
 ```
 
-`ask` rules take precedence over `allow`, so the routine surface (`deploy`, `apps`, `doctor`, `logs`, `whoami`, `env ls`, `files` reads, ...) runs hands-off while every destructive or access-changing command still prompts first: `9pm delete` (destroys an app), `9pm deployments rm`/`deployments delete` (removes a deployment), `9pm files delete`, `9pm env rm`, and any `9pm access` change. Use `ask`, not `deny` - `deny` would block those commands outright instead of prompting for them.
+`ask` rules take precedence over `allow`, so the routine surface (`deploy`, `apps`, `doctor`, `logs`, `whoami`, `env ls`, `files` reads, ...) runs hands-off while every destructive or access-changing command still prompts first: `9pm delete` (destroys an app), `9pm deployments rm`/`deployments delete` (removes a deployment), `9pm files delete`, `9pm files share` (mints a link to a file - and with `--public`, one that needs no sign-in), `9pm env rm`, and any `9pm access` change. Use `ask`, not `deny` - `deny` would block those commands outright instead of prompting for them.
 
 This trusts the installed `9pm` binary. If you run the `npx ninepm` form instead, add the same rules with an `npx ninepm` prefix (including `Bash(npx ninepm delete *)` under `ask`); they match `npx ninepm <args>` directly.
 
@@ -281,8 +282,14 @@ When one URL equals one private workspace (a shared board, doc, or the todo demo
 ```sh
 9pm files put ./report.pdf --project app-name
 9pm files share <file-id> --expires 24h
-9pm files share <file-id> --project app-name --login-required
+9pm files share <file-id> --project app-name --public
 ```
+
+Shares are owner-only by default: the link opens only for the signed-in owner. Add
+`--public` when the recipient has no account and the contents are safe to publish -
+that link needs no sign-in, so anyone who obtains the URL can download the file until
+it expires. Never pass `--public` for anything containing personal data, credentials or
+a database export.
 
 10. Report both the live URL and the dashboard URL printed by the CLI.
 
@@ -378,7 +385,7 @@ Store generated artifacts or share files without handling storage credentials:
 9pm files list [--project app-name]
 9pm files put <local-path> [--path remote/path] [--project app-name]
 9pm files get <file-id> [--output ./local] [--project app-name]
-9pm files share <file-id> [--expires 24h] [--login-required] [--project app-name]
+9pm files share <file-id> [--expires 24h] [--public] [--project app-name]
 9pm files delete <file-id> [--project app-name]
 ```
 

@@ -33,11 +33,11 @@ Read the fetched file now — a skill file saved mid-session is not auto-loaded.
 
 3. Pre-trust the `9pm` commands so you can run the deploy flow without asking the user to approve every command. This is the agent harness's command-approval gate, separate from any network trust — and it is harness-specific, so apply only your branch (the skill's Command Approval section is the canonical reference):
 
-**Claude Code only:** merge this into `.claude/settings.local.json` in the user's project — create the file if absent, and merge into an existing `permissions` block rather than overwriting it. It costs one approval to write the file and saves a dozen later. The `ask` rules keep every destructive or access-changing command (`delete`, `deployments rm`/`delete`, `files delete`, `env rm`, any `access` change) prompting first, while the routine flow runs hands-off:
+**Claude Code only:** merge this into `.claude/settings.local.json` in the user's project — create the file if absent, and merge into an existing `permissions` block rather than overwriting it. It costs one approval to write the file and saves a dozen later. The `ask` rules keep every destructive or access-changing command (`delete`, `deployments rm`/`delete`, `files delete`, `files share`, `env rm`, any `access` change) prompting first, while the routine flow runs hands-off:
 
 {
   "permissions": {
-    "ask": ["Bash(9pm delete *)", "Bash(9pm deployments rm *)", "Bash(9pm deployments delete *)", "Bash(9pm files delete *)", "Bash(9pm env rm *)", "Bash(9pm access *)"],
+    "ask": ["Bash(9pm delete *)", "Bash(9pm deployments rm *)", "Bash(9pm deployments delete *)", "Bash(9pm files delete *)", "Bash(9pm files share *)", "Bash(9pm env rm *)", "Bash(9pm access *)"],
     "allow": ["Bash(9pm *)"]
   }
 }
