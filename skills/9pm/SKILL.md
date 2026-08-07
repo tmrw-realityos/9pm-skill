@@ -94,6 +94,28 @@ If you run inside a sandbox with restricted network egress (the Claude cloud san
 
 Get the CLI without touching the allowlist: run it via `npx ninepm <args>` (or `npm i -g ninepm` for a persistent binary). The public npm registry is on the Trusted default, so this needs no extra trust.
 
+### Deploying without touching the allowlist: the 9pm connector
+
+In a cloud sandbox the network policy is applied when the environment is built, so an agent already inside cannot change it - and the user may not want to change it at all. For that case 9pm publishes an MCP connector at `https://api.9pm.ai/mcp`. Connector traffic is routed through the agent platform's own servers instead of out of the sandbox, so it reaches the platform on default "Trusted" settings with nothing added to Allowed domains.
+
+Adding it is a one-time step the **user** performs outside the session, in their agent platform's connector settings, followed by a browser sign-in to approve access. The tools then appear in every later session. You cannot add it from inside the sandbox.
+
+Check before you send the user through that setup: **deploying through the connector has to be enabled per environment.** Where it is not, the identity and app-management tools still work but `deploy_begin` answers with an instruction to trust `api.9pm.ai` instead of an upload URL - in which case the allowlist below is the only route and the connector saves nothing. If you already have the connector, one `deploy_begin` call tells you which case you are in.
+
+It covers identity (`whoami`), listing and creating apps, deploying, deployment status and app URL. A deploy runs as begin, upload, finalize:
+
+1. `deploy_begin` with the app slug and a manifest of the built files (path, size, lowercase-hex sha256, content type). It returns a `deployId` and presigned upload URLs for the files whose content the platform does not already have - **at most 50 per response**. When it also returns a `nextCursor`, call `deploy_upload_targets` with that cursor and keep going until no cursor comes back: those later pages are the rest of your files, and a build with more than 50 new files cannot finalize if you skip them. A container app gets a single URL for the image tar instead.
+2. PUT each file's bytes to its own URL from inside the sandbox.
+3. `deploy_finalize` with the `deployId`. It ingests in batches, so if it reports it is still uploading, call it again until it publishes and returns the live URL. For a container app it returns once the tar has been read back; poll `get_deployment_status` until the app is up.
+
+What it does not cover:
+
+- **Worker-runtime apps.** The connector refuses them rather than mis-publishing. Trust `api.9pm.ai` and deploy with the CLI instead.
+- **Static builds over 500 files in one deploy.** Same remedy.
+- **Everything else in this skill** - environment variables, secrets, access modes, managed files, delete - is CLI-only. The connector is an extra deploy path, not a replacement for the CLI.
+
+### Trusting the API host
+
 Host to trust for deploying:
 
 - `api.9pm.ai` - the deploy API the CLI calls (`9pm login`, `deploy`, `apps`, ...). This is the one host to add: the CLI reaches the platform here, and it is not on the Trusted default. (The CLI comes from public npm and this skill from GitHub - both already Trusted - so no other 9pm host needs allowlisting.)
@@ -405,7 +427,7 @@ Most failures are self-fixable — read the error the CLI prints, then work down
 
 - **Auth / "not signed in" / 401:** run `9pm doctor` (checks the stored credential and reachability), then `9pm whoami` to confirm who you are. If the credential is missing or expired, `9pm login` again.
 - **"Unknown command" or behavior that doesn't match this guide:** suspect an out-of-date CLI. Run `9pm latest`, and upgrade if it's behind (see *Versioning*).
-- **Deploy refused before any upload (calls to `api.9pm.ai` are blocked):** you're in a sandbox with restricted egress. Trust `api.9pm.ai` (see *Sandboxed Environments*) — applied from *outside* the sandbox, before the session. (`npx ninepm` itself needs no allowlisting.)
+- **Deploy refused before any upload (calls to `api.9pm.ai` are blocked):** you're in a sandbox with restricted egress. Either trust `api.9pm.ai` or add the 9pm connector (see *Sandboxed Environments*) — both applied from *outside* the sandbox, before the session. (`npx ninepm` itself needs no allowlisting.)
 - **Deploy/build failed:** the CLI prints the reason. Common fixes: ensure the build output directory exists and is non-empty; re-run with `9pm deploy <dir> --check` to validate the directory before deploying; for `--runtime container`, confirm the image builds locally and the app listens on `0.0.0.0:$PORT`; if a requested capability (always-on, volume, custom sizing) is rejected, it may not be enabled for this account — drop it or escalate.
 - **`asset_file_too_large`:** a single static file exceeds the 25 MiB per-file limit (see *Supported App Shapes*). This is deterministic — do not retry. Split or externally host the oversized asset (usually a large WASM binary), or deploy the app as a container.
 

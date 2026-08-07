@@ -64,3 +64,10 @@ Use `ask` (which prompts), not `deny` (which would block those commands outright
 Then defer to the skill: for an established account or a session inside an existing project, inspect and propose deploying that app; for a fresh empty signup, the skill's First Todo App section covers the optional demo. Never build the demo unasked.
 
 If the app needs per-user accounts (sign-in, "my stuff" data), 9pm offers managed end-user auth (`--with-auth`) so you don't have to wire up an external identity provider — the skill's End-User Accounts section covers it.
+
+## If the sandbox blocks the platform
+
+In a cloud sandbox on default network settings, `9pm login` and `9pm deploy` fail because `api.9pm.ai` is not trusted, and an agent already inside the sandbox cannot change that - the policy is applied when the environment is built. Two ways out, both performed by the user outside the session:
+
+- **Trust the host:** switch the environment's network access to Custom, add `api.9pm.ai` to Allowed domains, then run the steps above. This always works and gives the full CLI surface, so prefer it whenever the user is willing to change the setting.
+- **Add the 9pm connector** at `https://api.9pm.ai/mcp` in the agent platform's connector settings, then approve the browser sign-in. Connector traffic is routed through that platform's own servers, so it needs no network change at all - the path to take when the user cannot or will not touch the settings. Say this before they set it up, though: **deploying through the connector is enabled per environment.** Where it is not, the connector still authenticates and manages apps, but `deploy_begin` answers with an instruction to trust `api.9pm.ai` instead of an upload URL, which puts you back on the first option. Where it is enabled it deploys static and container apps; worker apps, and the commands the connector has no tool for (environment variables, secrets, access modes, managed files, delete), need the host trusted either way. The skill's *Sandboxed Environments* section is the full reference.
