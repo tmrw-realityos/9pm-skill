@@ -299,7 +299,7 @@ When one URL equals one private workspace (a shared board, doc, or the todo demo
 9pm logs <app> --json         # machine-readable
 ```
 
-   `9pm logs` reports the latest container deployment's status, health, the platform-neutral failure reason, and the captured build/startup output when a deploy failed to come up. It is read-only and does not affect deploys. A deployment reported `active` that only errors on live requests may have no captured logs yet; in that case the command says so rather than implying the app is healthy.
+   `9pm logs` reports the latest container deployment's status, health, the platform-neutral failure reason, and the captured build/startup output when a deploy failed to come up. For an app with a persistent disk it also reports how full that disk is — check it before assuming a stateful app's startup failure is a full disk, since that guess is otherwise unverifiable from inside the app. It is read-only and does not affect deploys. A deployment reported `active` that only errors on live requests may have no captured logs yet; in that case the command says so rather than implying the app is healthy.
 
 9. Use managed files for generated artifacts or handoff files. Never request storage credentials:
 
