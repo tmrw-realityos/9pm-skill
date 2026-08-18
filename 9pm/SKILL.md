@@ -289,7 +289,7 @@ When one URL equals one private workspace (a shared board, doc, or the todo demo
 
    For persistence, see the Persistence section: prefer `--volume <gb>` (mounts at `/data`) to keep an app's existing local database where it is enabled, and fall back to `--with-db` (managed SQL — the app reads `NINEPM_SQL_URL` and `NINEPM_DB_BINDINGS` for the bridge) when a volume is unavailable or the app has no disk of its own. If deployment is blocked by image size, report whether it hit the per-app image limit, account retained-image quota, or platform capacity. Report `queued`, `publishing`, `active`, or `failed` exactly as printed by the CLI.
 
-   Container readiness checklist: Dockerfile present, HTTP server binds to `0.0.0.0`, selected `--port` matches the app's listen port, optional health endpoint returns 2xx, persistent state uses an attached `--volume` (writing to `/data`) or managed SQL, and secrets are not baked into the image — set them with `9pm env` instead.
+   Container readiness checklist: Dockerfile present, HTTP server binds to `0.0.0.0`, selected `--port` matches the app's listen port, optional health endpoint returns 2xx, persistent state uses an attached `--volume` (writing to `/data`) or managed SQL, and secrets are not baked into the image — set them with `9pm env` instead. A failing health endpoint should answer 500 (or any error other than 502/503): the platform reserves 502/503 for its own "machine not up" signal, so on placements that stop idle apps a health check answering those reads as the machine waking, not as a verdict about the app.
 
    If a container app fails to come up or you need to investigate it after the fact, retrieve its most recent recorded logs:
 
