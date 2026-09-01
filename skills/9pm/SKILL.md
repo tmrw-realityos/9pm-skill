@@ -100,7 +100,7 @@ npx skills add tmrw-realityos/9pm-skill --skill 9pm -g
 
 To check for drift without reinstalling, compare this file's `Skill guide stamp` line against the copy at `https://raw.githubusercontent.com/tmrw-realityos/9pm-skill/main/skills/9pm/SKILL.md` — the same source the install command uses, trusted by default in sandboxes. Any difference means refresh. (The copy served at `https://9pm.ai/skills/9pm/SKILL.md` tracks platform releases and can briefly lag that source, so don't use it as the freshness reference.)
 
-Skill guide stamp: 2026-09-01 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
+Skill guide stamp: 2026-09-01.1 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
 
 ## Sandboxed Environments
 
@@ -190,7 +190,7 @@ This trusts the installed `9pm` binary. If you run the `npx ninepm` form instead
 
 Most apps that store data already use a local database or files. Deploy what they have — do not rewrite the storage layer to fit the platform unless the user explicitly asks. Two persistence options, in order of least disruption:
 
-- **Persistent disk for a container app (`--volume <gb>`), where enabled.** This is the smallest change for a container that already has a local database (SQLite file, embedded store, on-disk data): the disk mounts at `/data`, so point the app's database/data directory at `/data` and keep its current code. A container's filesystem is otherwise ephemeral, so on-disk data is lost between deploys/restarts without a volume. Note this needs a placement that supports volumes and may require platform enablement — if `--volume` returns `container_capability_unavailable`, the disk option is off for this account; fall back to managed SQL below rather than guessing.
+- **Persistent disk for a container app (`--volume <gb>`), where enabled.** This is the smallest change for a container that already has a local database (SQLite file, embedded store, on-disk data): the disk mounts at `/data`, so point the app's database/data directory at `/data` and keep its current code. A container's filesystem is otherwise ephemeral, so on-disk data is lost between deploys/restarts without a volume. A redeploy keeps the existing disk automatically (omit `--volume`), and a larger `--volume` than the current disk grows it in place with its data preserved; sizes never shrink — a smaller `--volume` is refused; to recreate a disk smaller, drop it first with `--no-volume --allow-data-wipe` (which destroys its data), then deploy again with the smaller size (fresh empty disk). Note this needs a placement that supports volumes and may require platform enablement — if `--volume` returns `container_capability_unavailable`, the disk option is off for this account; fall back to managed SQL below rather than guessing.
 - **Managed SQL (`--with-db`).** Always available, maintenance-free, and the right choice for server-runtime apps with no disk of their own or when a volume is not enabled. For a container app that already has its own database, switching to managed SQL means rewriting its data access against the SQL bridge below — propose that as a deliberate change and get the user's approval first; never silently refactor an app's storage just to deploy it.
 
 ### Managed SQL
