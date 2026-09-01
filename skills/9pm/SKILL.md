@@ -80,6 +80,8 @@ Upgrade with:
 npm i -g ninepm@latest
 ```
 
+The CLI also checks by itself after a successful `9pm deploy` (at most one registry probe per day) and prints an `Update available: ...` line when the installed version is behind. Treat that line as the cue to upgrade now — and to refresh this skill (see *Keeping this skill fresh* below). Set `NINEPM_NO_UPDATE_CHECK=1` to silence the check.
+
 The CLI is the npm package `ninepm` on the public npm registry. Run it ad-hoc with `npx ninepm <args>` (no install), or install a persistent `9pm` binary with `npm i -g ninepm`:
 
 ```sh
@@ -87,6 +89,18 @@ npx ninepm <args>
 ```
 
 `npx ninepm` is the simplest path in a restricted sandbox: the public npm registry is on the default "Trusted" allowlist, so it runs without trusting any 9pm host to fetch the CLI (see *Sandboxed Environments*). Reads are anonymous; no token needed to install.
+
+### Keeping this skill fresh
+
+This guide ships alongside the CLI and goes stale the same way. Whenever the CLI reports being behind — the post-deploy `Update available:` line, `9pm latest`, or `9pm doctor` — also refresh the installed skill with the same command that installs it:
+
+```sh
+npx skills add tmrw-realityos/9pm-skill --skill 9pm -g
+```
+
+To check for drift without reinstalling, compare this file's `Skill guide stamp` line against the copy at `https://raw.githubusercontent.com/tmrw-realityos/9pm-skill/main/skills/9pm/SKILL.md` — the same source the install command uses, trusted by default in sandboxes. Any difference means refresh. (The copy served at `https://9pm.ai/skills/9pm/SKILL.md` tracks platform releases and can briefly lag that source, so don't use it as the freshness reference.)
+
+Skill guide stamp: 2026-09-01 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
 
 ## Sandboxed Environments
 
