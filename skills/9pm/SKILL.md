@@ -100,7 +100,7 @@ npx skills add tmrw-realityos/9pm-skill --skill 9pm -g
 
 To check for drift without reinstalling, run `9pm doctor` — its `Skill:` line compares the installed copy's `Skill guide stamp` against the public source — or compare this file's stamp line yourself against the copy at `https://raw.githubusercontent.com/tmrw-realityos/9pm-skill/main/skills/9pm/SKILL.md`, the same source the install command uses, trusted by default in sandboxes. Any difference means refresh. (The copy served at `https://9pm.ai/skills/9pm/SKILL.md` tracks platform releases and can briefly lag that source, so don't use it as the freshness reference.)
 
-Skill guide stamp: 2026-09-01.1 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
+Skill guide stamp: 2026-09-05.1 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
 
 ## Sandboxed Environments
 
@@ -228,6 +228,18 @@ Sign-in behavior and edge cases — relevant when the app builds its **own** UI 
 - **Five wrong attempts invalidate the code** — the error stays the same generic `invalid_code` by design.
 - **`request-code` always returns `202 {"ok":true}`**, whether or not the address is known or the email could be delivered — accounts can't be enumerated through this endpoint, so don't treat a 202 as proof of delivery. If someone mistypes a stranger's address, the recipient's email says it can be safely ignored; an account is only created on the first successful `verify`.
 - Surface the `error.message` from `400`/`429` responses directly — they're written for end users.
+
+### Native and mobile clients
+
+A native client (an iOS or Android app, a desktop app, a CLI) has no browser cookie jar, so it uses a **bearer transport** for the same session credential. Same account, same `ctx.user` / `X-9pm-User`, no backend changes: the app's server code reads the current user from the one place it already does, whether the request came from a browser or a phone.
+
+- **Sign in** exactly as above — `POST /__9pm/auth/request-code`, then `POST /__9pm/auth/verify` — but send the header **`X-9pm-Session-Transport: bearer`** on the verify call. The response is then `{ user, token, expiresAt }` with **no** `Set-Cookie`. Store `token` in the platform's secure storage (Keychain on iOS, Keystore on Android), never in plain preferences or logs.
+- **Authenticate every later request** with `Authorization: Bearer <token>`. `GET /__9pm/auth/me`, the app's own routes and `POST /__9pm/email/invite` all accept it. The header is verified and **removed** before it reaches the app's code — read the user from `ctx.user` / `X-9pm-User`, never by parsing the header yourself. Values in `Authorization` that are not a 9pm session credential are left untouched, so an app can keep its own API-key scheme alongside.
+- **Browser apps must not opt in.** Keep using the cookie path (do not send the transport header): a credential that page scripts can hold loses the protection the `HttpOnly` cookie gives it. The header is for clients that cannot use cookies.
+- **Sign-out means deleting the stored token.** Sessions are stateless and run to `expiresAt` (7 days); `POST /__9pm/auth/logout` is harmless from a native client but revokes nothing. Say so honestly in the app's UI, and re-run the code flow when the token expires.
+- **If both a cookie and a bearer are present** (an embedded web view can do this), the bearer decides — live or expired — and the cookie is ignored for that request.
+- **Private access modes are not supported for native clients**: on any `private_*` app the access gate identifies the visitor through a browser session, and this transport is not consulted for identity (a 9pm session token in `Authorization` is still removed before it reaches the app). A native companion needs a `public` app with managed accounts.
+- **Apps deployed before this transport existed must be redeployed once** to gain it; the bearer path lives in the code 9pm wraps around each app at deploy time.
 
 ### Multi-user patterns
 
