@@ -100,7 +100,7 @@ npx skills add tmrw-realityos/9pm-skill --skill 9pm -g
 
 To check for drift without reinstalling, run `9pm doctor` — its `Skill:` line compares the installed copy's `Skill guide stamp` against the public source — or compare this file's stamp line yourself against the copy at `https://raw.githubusercontent.com/tmrw-realityos/9pm-skill/main/skills/9pm/SKILL.md`, the same source the install command uses, trusted by default in sandboxes. Any difference means refresh. (The copy served at `https://9pm.ai/skills/9pm/SKILL.md` tracks platform releases and can briefly lag that source, so don't use it as the freshness reference.)
 
-Skill guide stamp: 2026-09-05.1 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
+Skill guide stamp: 2026-09-06.1 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
 
 ## Sandboxed Environments
 
@@ -240,6 +240,32 @@ A native client (an iOS or Android app, a desktop app, a CLI) has no browser coo
 - **If both a cookie and a bearer are present** (an embedded web view can do this), the bearer decides — live or expired — and the cookie is ignored for that request.
 - **Private access modes are not supported for native clients**: on any `private_*` app the access gate identifies the visitor through a browser session, and this transport is not consulted for identity (a 9pm session token in `Authorization` is still removed before it reaches the app). A native companion needs a `public` app with managed accounts.
 - **Apps deployed before this transport existed must be redeployed once** to gain it; the bearer path lives in the code 9pm wraps around each app at deploy time.
+
+### User files
+
+When signed-in users need to **keep their own files** — photos, documents, avatars — managed accounts include per-user file storage, so the app never provisions a bucket, signs an upload URL, or holds storage credentials. It comes with `--with-auth`; there is no separate flag. **Never store binaries in the managed database, and never bring a bucket** — use this. Files belong to the app, and the app decides which user may see which file.
+
+Worker-runtime apps get a `ctx.files` client. It is `null` when the app has no managed accounts or is a private/access-gated app (there, files ride the access session), so feature-test it. Every call throws on a signed-out request before doing any work, so gate on `ctx.user` first.
+
+Uploading is a three-step grant, so the bytes go **straight from the client to storage**, never through the app:
+
+1. **Ask for a grant.** `const { grant } = await ctx.files.createUploadGrant({ path, contentType, sizeBytes })`. `path` is the app's choice of key — scope it per user, e.g. `` `${ctx.user.id}/avatar.jpg` ``. `sizeBytes` is the file's **exact** size; `contentType` must be in the allowlist below. `grant` is `{ fileId, url, method, headers, expiresAt }` and is good for 5 minutes. Completing a second upload at a `path` the same user already has **replaces** the old file — the previous one is deleted. That is what you want for a stable key like `avatar.jpg`; use a unique `path` (a random id, a timestamp) when every file must be kept.
+2. **Upload the bytes.** The client `PUT`s the file to `grant.url` with `grant.method` and `grant.headers` unchanged — the headers carry the exact `Content-Length`, and a body of any other size is refused. From a browser this is a cross-origin `PUT`; nothing else about it is special.
+3. **Finalize.** `await ctx.files.complete(grant.fileId)`. A file stays pending and unreadable until this runs.
+
+Then:
+
+- **Read:** `const { url } = await ctx.files.createReadGrant(fileId)` — a short-lived link on the files domain that serves the bytes with `nosniff` and a sandbox policy (images inline, everything else as a download). Put it in an `<img src>` or hand it to the client.
+- **List:** `const { files, nextCursor } = await ctx.files.list({ prefix })` — the raw list is **app-wide**, so scope it with `prefix` (e.g. the user's id). It returns at most 200 files at a time; if `nextCursor` is non-null there are more, so page with `list({ prefix, cursor: nextCursor })` until it comes back null, or a user with many files sees only their newest.
+- **Delete:** `await ctx.files.remove(fileId)`.
+
+> **`createReadGrant` and `remove` take a raw `fileId` scoped only to the app, not to the current user** — the platform does not check that the file belongs to whoever is signed in. (`complete` is the exception: only the uploader can finalize their own pending upload.) So **before reading or deleting a client-supplied id, verify server-side that the file is this user's** — e.g. confirm its `path` is under the user's own prefix, or that a `list({ prefix })` for that user contains it. Skipping the check lets a signed-in user read or permanently delete another user's file by guessing an id. "Signed in" is not authorization — the ownership check is the app's job, exactly as with the managed database.
+
+Failures throw a `NinepmFilesError` carrying a `code`, a user-ready `message`, and an HTTP `status` — `not_signed_in`, `invalid_content_type`, `invalid_size`, `file_too_large`, `file_storage_quota_exceeded` (the owner's account is full), `app_file_ceiling_exceeded` (this app hit its own limit). Surface the `message`.
+
+- **Allowed content types:** `image/jpeg`, `image/png`, `image/webp`, `image/gif`, `image/heic`, `application/pdf`, `text/plain`, `application/octet-stream`. **Size cap:** 25 MiB per file (about 26 MB).
+- **Container apps** don't get `ctx.files`; they call the same operations over the bridge at `NINEPM_FILES_URL` — `POST $NINEPM_FILES_URL/<op>` where `<op>` is `grants/upload`, `complete`, `grants/read`, `list`, or `delete`, with the same JSON bodies. 9pm stamps every request it forwards into the container with an `X-9pm-Files-Ticket` header for the signed-in user, and **the container must copy that header from the incoming request onto its bridge `POST`** — without it the bridge answers `401 files_ticket_invalid`. The ticket is per-request and short-lived, so read it off the request you are handling and never cache it; the container never holds a long-lived credential.
+- **Apps deployed before this existed must be redeployed once** to gain it — the same one-time redeploy the native transport needs, because the file client lives in the code 9pm wraps around each app.
 
 ### Multi-user patterns
 
