@@ -100,7 +100,7 @@ npx skills add tmrw-realityos/9pm-skill --skill 9pm -g
 
 To check for drift without reinstalling, run `9pm doctor` — its `Skill:` line compares the installed copy's `Skill guide stamp` against the public source — or compare this file's stamp line yourself against the copy at `https://raw.githubusercontent.com/tmrw-realityos/9pm-skill/main/skills/9pm/SKILL.md`, the same source the install command uses, trusted by default in sandboxes. Any difference means refresh. (The copy served at `https://9pm.ai/skills/9pm/SKILL.md` tracks platform releases and can briefly lag that source, so don't use it as the freshness reference.)
 
-Skill guide stamp: 2026-09-06.1 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
+Skill guide stamp: 2026-09-14 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
 
 ## Sandboxed Environments
 
@@ -196,7 +196,7 @@ Most apps that store data already use a local database or files. Deploy what the
 ### Managed SQL
 
 - Server-runtime apps deployed with `--with-db` receive a `DB` binding. Use prepared statements: `env.DB.prepare("SELECT ...").bind(...).all()`.
-- Container apps deployed with `--with-db` receive `NINEPM_SQL_URL` and `NINEPM_DB_BINDINGS`. Send `POST` requests to `NINEPM_SQL_URL` with JSON shaped like `{ "binding": "DB", "sql": "SELECT 1", "params": [] }`.
+- Container apps deployed with `--with-db` receive `NINEPM_SQL_URL` and `NINEPM_DB_BINDINGS`, plus `NINEPM_SQL_TOKEN` where the bridge requires one. Send `POST` requests to `NINEPM_SQL_URL` with JSON shaped like `{ "binding": "DB", "sql": "SELECT 1", "params": [] }`. **When `NINEPM_SQL_TOKEN` is set, also send `Authorization: Bearer <that token>`** — a bridge that expects it refuses every request without it (`401 {"error":"unauthorized"}`), so omitting it looks like a broken database rather than a missing header. Read the URL and the token from the environment on each call rather than hardcoding either: the URL differs between placements, and the token is reissued on every deploy.
 - Keep SQL compatible with SQLite. For local dev, use a local SQLite/Postgres adapter behind a tiny repository layer and switch to the 9pm.ai binding or SQL bridge only in the deployed runtime.
 - Initialize schema idempotently with `CREATE TABLE IF NOT EXISTS` unless the app already has a migration system.
 
