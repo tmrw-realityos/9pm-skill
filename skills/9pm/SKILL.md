@@ -18,6 +18,7 @@ If this skill is not installed where your harness reads skills (or needs updatin
 - Never refactor an app — especially its storage layer — to fit 9pm.ai without explicit user approval. If an app already has a working database, attach storage to it (see Persistence) rather than rewriting it.
 - Run the app's existing build/test checks before deploying when available.
 - Run `9pm deploy <dir> --check` before the real deploy when supported.
+- An app can belong to an organisation instead of the person deploying it. Deploy into one with `--owner <organisation-slug>` (the account must be an admin or owner of it) and list its apps with `9pm apps --owner <organisation-slug>`; without the flag, everything is the account's own. Organisations are created and their members invited from the dashboard.
 - `9pm deploy` runs the project's own build locally — for framework apps that means `npm install` (and its lifecycle scripts), the framework build, or `docker build` execute on your machine. Only deploy directories you trust, the same way you'd trust running that project's build.
 - Report the deployed URL and any follow-up risks clearly.
 
