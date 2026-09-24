@@ -50,7 +50,7 @@ Use `ask` (which prompts), not `deny` (which would block those commands outright
 
 9pm login
 
-`9pm signup` creates an account from the terminal, but only works while public signup is open. When it is closed the command refuses immediately and tells you what to do — it does not hang. If the user has no account, run it and follow what it says: usually request an invite, create the account from the invite email in the browser, then `9pm login`.
+If the user has no account yet, they create it in the browser: `9pm signup` cannot create an account from the terminal, whether public signup is open or not. It refuses immediately and prints the next step, so run it and follow what it says: sign up on the page it links while public signup is open, or request an invite and create the account from the invite email while it is closed. Then run `9pm login`.
 
 9pm signup
 
