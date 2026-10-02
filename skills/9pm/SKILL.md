@@ -32,6 +32,7 @@ Authentication paths, in order of preference:
 2. A brand-new account is created in the browser, never from the terminal. `9pm signup` cannot create an account, whether public signup is open or not: it refuses immediately (it does not hang waiting for an approval) and prints the next step, which is the sign-up page while public signup is open, or requesting an invite while it is closed. Once the account exists, use `9pm login`. An invite link cannot be redeemed through `9pm signup`; the one-time link in the email is the only way to use it.
 3. User-set environment in their own terminal: `export NINEPM_API_KEY=9pm_...`. Warn that the value can land in shell history.
 4. `NINEPM_API_KEY` overrides stored login for CI.
+5. A key for CI or an unattended server is minted from a signed-in machine with `9pm api-key create --name <name>`; the token is printed once, so the user runs this in their own terminal and stores the value themselves. `9pm api-key ls` and `9pm api-key revoke <key-id>` manage them; an account holds at most 10 at a time, login tokens not counted.
 
 The endpoint defaults to `https://api.9pm.ai` unless the user specifies another. When a command needs it set explicitly:
 
