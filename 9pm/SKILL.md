@@ -188,6 +188,8 @@ This trusts the installed `9pm` binary. If you run the `npx ninepm` form instead
 
 **Calling one deployed app from another.** A runtime (server) app cannot reach another 9pm.ai app over its public hostname. Such a request never leaves the platform's internal network, so it fails with an edge error even though the other app is up and answering everyone else normally — nothing in the calling app's logs says why, and the other app looks healthy from outside. Call the other app from the **browser** instead, or from a **container app's own runtime**; both of those go out to the internet like any other client and work normally. `9pm deploy` warns when it spots another app's hostname in server code, but it can only see hostnames written literally — one assembled at runtime or read from an environment variable will not be caught. This does not apply to the platform's own API (`api.9pm.ai`), which server code may call normally.
 
+**Public files of a runtime app.** With `--entry`, choose which files are public: put the browser files (HTML, CSS, images, client scripts) in one directory and pass `--assets <dir>` — only that directory is served, from the app's root (`public/index.html` answers on `/`), and nothing else in the deploy directory is uploaded. Pass `--no-assets` when the entry serves everything itself. Always pass one of the two for a new runtime app: without either, **every file in the deploy directory except the entry is downloadable by anyone** — server helpers, config, backups like `index.js.orig`. The deploy warns when that is the case and names the files. The app remembers the choice, so a later deploy without the flag keeps it; pass the other flag (or a different directory) to change it. `9pm deploy --check` lists every file a deploy would make public. This does not apply to `--bundle` deploys, which serve only their `assets/` directory, or to static sites, which are public by definition.
+
 **Server code size.** Server code is limited to 9.9 MB compressed (gzip). That budget covers the deployed server modules together — for a framework bundle it is the total of every module, not a per-file limit — and static assets do not count toward it, since they are served from the asset store. `9pm deploy --check` prints the measured compressed size on a passing check as a `Server code (…): N bytes compressed of M allowed.` line, so read it from there to see the headroom; both `--check` and a real deploy reject an over-budget bundle before the app is created. Apps needing more server code than that should deploy as containers instead. This applies to both server-runtime shapes above — a single `--entry` module and a `--bundle` build alike.
 
 ## Persistence
@@ -331,10 +333,11 @@ When one URL equals one private workspace (a shared board, doc, or the todo demo
    9pm deploy ./dist --name "App Name" --slug app-name --description "Initial deploy"
    ```
 
-7. For app-owned server code, deploy a runtime entry:
+7. For app-owned server code, deploy a runtime entry, and name the directory of public files with `--assets` (or pass `--no-assets` if there are none) so server files stay private:
 
 ```sh
-9pm deploy ./app --name "App Name" --slug app-name --runtime worker --entry src/index.js
+9pm deploy ./app --check --runtime worker --entry src/index.js --assets public
+9pm deploy ./app --name "App Name" --slug app-name --runtime worker --entry src/index.js --assets public
 ```
 
 8. For Docker/container apps, confirm Docker is installed and the app reads the `PORT` environment variable for its listen port (never a hardcoded one — see the container-runtime notes above), then:
@@ -414,11 +417,12 @@ CREATE INDEX IF NOT EXISTS todos_workspace_created ON todos(workspace_id, create
 
 - API: `GET`/`POST` `/w/:workspace/api/todos`, `PATCH`/`DELETE` `/w/:workspace/api/todos/:id { text?, done? }`.
 - Stack: Vite + React + TypeScript with vite-plugin-singlefile so the SPA collapses to one HTML file; bundle the worker entry as ESM exporting a default `fetch`-compatible handler (`export { app as default }` is supported).
+- Layout: the built SPA at `deploy/public/index.html`, the bundled entry at `deploy/src/index.js`.
 - Deploy:
 
 ```sh
-9pm deploy ./deploy --check --runtime worker --entry src/index.js
-9pm deploy ./deploy --name "Todo" --slug todo --runtime worker --entry src/index.js --with-db
+9pm deploy ./deploy --check --runtime worker --entry src/index.js --assets public
+9pm deploy ./deploy --name "Todo" --slug todo --runtime worker --entry src/index.js --assets public --with-db
 ```
 
 - Polish bar: intentional typography, sensible spacing, dark mode via `prefers-color-scheme`, keyboard support, aria-labels on icon buttons, inline SVG icons only, no third-party assets. Report the live URL and dashboard URL the CLI prints.
