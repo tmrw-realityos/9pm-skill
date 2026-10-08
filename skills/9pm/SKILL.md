@@ -102,7 +102,7 @@ npx skills add tmrw-realityos/9pm-skill --skill 9pm -g
 
 To check for drift without reinstalling, run `9pm doctor` — its `Skill:` line compares the installed copy's `Skill guide stamp` against the public source — or compare this file's stamp line yourself against the copy at `https://raw.githubusercontent.com/tmrw-realityos/9pm-skill/main/skills/9pm/SKILL.md`, the same source the install command uses, trusted by default in sandboxes. Any difference means refresh. (The copy served at `https://9pm.ai/skills/9pm/SKILL.md` tracks platform releases and can briefly lag that source, so don't use it as the freshness reference.)
 
-Skill guide stamp: 2026-10-08 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
+Skill guide stamp: 2026-10-08.1 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
 
 ## Sandboxed Environments
 
@@ -392,6 +392,13 @@ For per-user accounts, prefer 9pm's managed end-user auth (`--with-auth`) — se
 
 If the app uses an external auth/identity provider (Supabase, Auth0, Clerk, Firebase, ...), its login, password-reset, and magic-link redirects are configured in that provider's dashboard, not in the app's env. After deploying to the 9pm URL, tell the user to update the provider's Site URL and allowed redirect URLs to **the exact live URL the deploy printed** (step 10) — copy it, do not reconstruct it from the slug. The hostname carries a per-app suffix (`<slug>-<suffix>.<domain>`), so a URL built from the slug alone is a hostname no app is served on: it resolves and then fails, which looks like the platform being down rather than a wrong redirect, and every login and magic link breaks that way. Getting this wrong is also invisible until a real user tries to sign in. The agent cannot change the provider's dashboard, so flag this as a required manual step alongside setting any `*_SITE_URL` env the app reads.
 
+**Will a printed link or QR code keep working?** Tell the user before they print or hand out an app's URL. The suffix in `<slug>-<suffix>.<domain>` comes from the app's internal id, not from the slug, so:
+
+- Redeploying under the same slug keeps the address.
+- Deleting the app and creating it again under the same slug gives it a **new** address, because the new app gets a new id. Everything printed with the old one stops working, so do not delete and re-create an app whose address is already out in the world.
+- There is no rename: a different address means a different app.
+- A custom domain the user owns, added on the dashboard's Domains page, gives the app an address of its own. Not every plan includes custom domains.
+
 ## Previews and Branches
 
 9pm deploys the files at the path you give it under the slug you pass. It has no notion of git branches or worktrees — deploying does not "pick up the current branch," it uploads whatever is in the deploy directory. Two consequences to handle so a deploy ships the code the user means:
@@ -487,7 +494,7 @@ Store generated artifacts or share files without handling storage credentials:
 
 ## Delete
 
-`9pm delete` destroys the app, managed database, managed container app, retained image, and project files. Rows are not recoverable. Before running, state this to the user verbatim and get explicit confirmation, even if they already asked for deletion.
+`9pm delete` destroys the app, managed database, managed container app, retained image, and project files. Rows are not recoverable. The app's address goes too: an app created again under the same slug gets a new address, so printed links and QR codes stop working. Before running, state this to the user verbatim and get explicit confirmation, even if they already asked for deletion.
 
 ```sh
 9pm delete app-name --confirm app-name
