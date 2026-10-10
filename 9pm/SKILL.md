@@ -102,7 +102,7 @@ npx skills add tmrw-realityos/9pm-skill --skill 9pm -g
 
 To check for drift without reinstalling, run `9pm doctor` — its `Skill:` line compares the installed copy's `Skill guide stamp` against the public source — or compare this file's stamp line yourself against the copy at `https://raw.githubusercontent.com/tmrw-realityos/9pm-skill/main/skills/9pm/SKILL.md`, the same source the install command uses, trusted by default in sandboxes. Any difference means refresh. (The copy served at `https://9pm.ai/skills/9pm/SKILL.md` tracks platform releases and can briefly lag that source, so don't use it as the freshness reference.)
 
-Skill guide stamp: 2026-10-09.1 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
+Skill guide stamp: 2026-10-09.2 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
 
 ## Sandboxed Environments
 
@@ -397,7 +397,7 @@ If the app uses an external auth/identity provider (Supabase, Auth0, Clerk, Fire
 - Redeploying under the same slug keeps the address.
 - Deleting the app and creating it again under the same slug gives it a **new** address, because the new app gets a new id. Everything printed with the old one stops working, so do not delete and re-create an app whose address is already out in the world.
 - There is no rename: a different address means a different app.
-- A custom domain the user owns, added on the dashboard's Domains page, gives the app an address of its own. Not every plan includes custom domains.
+- A custom domain the user owns gives the app an address of its own that does not depend on the app's id. See Custom Domains for how to add one; not every plan includes them.
 
 **Pages that do not exist.** A static site or `--entry` worker app answers a path with no file in one of two ways, and every deploy prints which as a `Missing pages:` line:
 
@@ -418,6 +418,20 @@ Pass `--spa` for a single-page app with client-side routing (React Router, Vue R
 ```
 
 When the intent is to preview unfinished work, default to a separate preview slug and confirm with the user whether they want that or to replace the live app at its existing slug. Delete previews you no longer need with `9pm delete <slug> --confirm <slug>` (the `--confirm` flag is required and must match the slug).
+
+## Custom Domains
+
+An app can also answer on a domain the user owns, such as `app.example.com`. The user does this in the dashboard; there is no CLI command for it yet (one is coming), so walk them through it rather than trying to do it yourself.
+
+- **Plan:** not on the Free plan. If the dashboard says custom domains aren't included, that is the plan, not a fault. Service-token apps (`private_service`) cannot have one.
+- **Where:** Dashboard → the app's own page → **Custom domains** → **Add a domain**. The account-wide Domains page only lists the domains already added; it has no add form.
+- **DNS records:** the dashboard then shows the records to create and names who hosts the domain's DNS. The user adds them there (their registrar or DNS host), not on 9pm.
+  - A **subdomain** (`app.example.com`, `www.example.com`) gets a CNAME to the value shown.
+  - A **root domain** (`example.com`) cannot take a CNAME; it needs the provider's ALIAS, ANAME or CNAME-flattening record. Some providers (for example GoDaddy, or Route 53 for a target outside AWS) have no record that works, so use `www.` or another subdomain there.
+  - Enter the **host part exactly as the dashboard shows it** (`app`, `_acme-challenge.app`). Most providers append the domain themselves, so typing the full name doubles it (`app.example.com.example.com`).
+  - The two `_acme-challenge` TXT values are **two separate TXT records** with the same name. Leave any existing TXT records alone.
+  - **Never delete MX records, or other TXT records at the root**, to make room: they carry the domain's email and verification.
+- **Status:** **Re-check** re-reads the records and the domain's status. Once the records are in, the certificate has followed within a few minutes in practice, but DNS can take longer to propagate, so don't promise a time. **Start over** restarts validation from scratch; use it only when Re-check stays stuck after the records are confirmed correct.
 
 ## First Todo App
 
