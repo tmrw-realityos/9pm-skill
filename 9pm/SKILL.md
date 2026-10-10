@@ -102,7 +102,7 @@ npx skills add tmrw-realityos/9pm-skill --skill 9pm -g
 
 To check for drift without reinstalling, run `9pm doctor` — its `Skill:` line compares the installed copy's `Skill guide stamp` against the public source — or compare this file's stamp line yourself against the copy at `https://raw.githubusercontent.com/tmrw-realityos/9pm-skill/main/skills/9pm/SKILL.md`, the same source the install command uses, trusted by default in sandboxes. Any difference means refresh. (The copy served at `https://9pm.ai/skills/9pm/SKILL.md` tracks platform releases and can briefly lag that source, so don't use it as the freshness reference.)
 
-Skill guide stamp: 2026-10-10.2 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
+Skill guide stamp: 2026-10-10.3 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
 
 ## Sandboxed Environments
 
@@ -430,17 +430,34 @@ When the intent is to preview unfinished work, default to a separate preview slu
 
 ## Custom Domains
 
-An app can also answer on a domain the user owns, such as `app.example.com`. The user does this in the dashboard; there is no CLI command for it yet (one is coming), so walk them through it rather than trying to do it yourself.
+An app can also answer on a domain the user owns, such as `app.example.com`. When the user asks for "my own domain", connect it with `9pm domains` (CLI 0.72.0 or later; if the command is unknown, update the CLI first):
 
-- **Plan:** not on the Free plan. If the dashboard says custom domains aren't included, that is the plan, not a fault. Service-token apps (`private_service`) cannot have one.
-- **Where:** Dashboard → the app's own page → **Custom domains** → **Add a domain**. The account-wide Domains page only lists the domains already added; it has no add form.
-- **DNS records:** the dashboard then shows the records to create and names who hosts the domain's DNS. The user adds them there (their registrar or DNS host), not on 9pm.
-  - A **subdomain** (`app.example.com`, `www.example.com`) gets a CNAME to the value shown.
-  - A **root domain** (`example.com`) cannot take a CNAME; it needs the provider's ALIAS, ANAME or CNAME-flattening record. Some providers (for example GoDaddy, or Route 53 for a target outside AWS) have no record that works, so use `www.` or another subdomain there.
-  - Enter the **host part exactly as the dashboard shows it** (`app`, `_acme-challenge.app`). Most providers append the domain themselves, so typing the full name doubles it (`app.example.com.example.com`).
-  - The two `_acme-challenge` TXT values are **two separate TXT records** with the same name. Leave any existing TXT records alone.
-  - **Never delete MX records, or other TXT records at the root**, to make room: they carry the domain's email and verification.
-- **Status:** **Re-check** re-reads the records and the domain's status. Once the records are in, the certificate has followed within a few minutes in practice, but DNS can take longer to propagate, so don't promise a time. **Start over** restarts validation from scratch; use it only when Re-check stays stuck after the records are confirmed correct.
+```sh
+9pm domains add <app> <hostname>        # prints the DNS records to publish, and who hosts the domain's DNS
+9pm domains status <app> <hostname>     # what DNS shows now for each record; --json for {state, records[...]}
+9pm domains wait <app> <hostname>       # polls until live (--timeout 30m, --interval 20s)
+```
+
+Add `--owner <organisation>` for an organisation's app. Show the user the records from `add` **verbatim**; they publish them at their registrar or DNS host, not on 9pm. Then run `wait` and act on its exit code:
+
+- `0`: live. The domain serves the app.
+- `10`: timed out while a record is missing, or could not be checked. Have the user compare what they published with `9pm domains status`, then `wait` again.
+- `11`: timed out with every record found. The platform is still finishing; `wait` again, nothing needs changing.
+- `20`: failed or expired. The message says why. `9pm domains check <app> <hostname>` re-reads it; `9pm domains restart <app> <hostname>` starts validation over (the record values may change, so re-publish what it prints); an expired domain is added again with `add`.
+- `1`: a usage, sign-in or permission error. `add`, `check`, `restart` and `remove` need permission to configure the app; `status` and `wait` only read.
+
+Rules for the records, whichever way they are added:
+
+- **Plan:** not on the Free plan. If `add` or the dashboard says custom domains aren't included, that is the plan, not a fault. Service-token apps (`private_service`) cannot have one.
+- A **subdomain** (`app.example.com`, `www.example.com`) gets a CNAME to the value shown.
+- A **root domain** (`example.com`) cannot take a CNAME; `9pm domains` shows it as `ALIAS`: it needs the provider's ALIAS, ANAME or CNAME-flattening record. Some providers (for example GoDaddy, or Route 53 for a target outside AWS) have no record that works, so use `www.` or another subdomain there. A correct ALIAS answers with addresses rather than the target name, so its row follows the platform's routing check.
+- Enter the **host part exactly as shown** (`app`, `_acme-challenge.app`). Most providers append the domain themselves, so typing the full name doubles it (`app.example.com.example.com`).
+- The two `_acme-challenge` TXT values are **two separate TXT records** with the same name. Add each as its own record and leave any existing TXT records alone.
+- **Never delete MX records, or other TXT records at the root**, to make room: they carry the domain's email and verification.
+- **Timing:** once the records are in, the certificate has followed within a few minutes in practice, but DNS can take longer to propagate, so don't promise a time. Use `restart` only when the domain stays stuck after the records are confirmed correct.
+- `9pm domains remove <app> <hostname> --confirm <hostname>` disconnects a domain; it stops serving within seconds.
+
+Without the CLI (or if the user prefers), the same flow is in the dashboard: the app's own page → **Custom domains** → **Add a domain**, with **Re-check** and **Start over** buttons. The account-wide Domains page only lists the domains already added; it has no add form.
 
 ## First Todo App
 
