@@ -102,7 +102,7 @@ npx skills add tmrw-realityos/9pm-skill --skill 9pm -g
 
 To check for drift without reinstalling, run `9pm doctor` — its `Skill:` line compares the installed copy's `Skill guide stamp` against the public source — or compare this file's stamp line yourself against the copy at `https://raw.githubusercontent.com/tmrw-realityos/9pm-skill/main/skills/9pm/SKILL.md`, the same source the install command uses, trusted by default in sandboxes. Any difference means refresh. (The copy served at `https://9pm.ai/skills/9pm/SKILL.md` tracks platform releases and can briefly lag that source, so don't use it as the freshness reference.)
 
-Skill guide stamp: 2026-10-10.1 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
+Skill guide stamp: 2026-10-10.2 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
 
 ## Sandboxed Environments
 
@@ -483,14 +483,16 @@ Apps are public by default. Manage access only when requested:
 
 ```sh
 9pm access show app-name
-9pm access otp app-name
-9pm access idp app-name --provider google
+9pm access otp app-name --switch-mode
+9pm access idp app-name --provider google --switch-mode
 9pm access allow email app-name user@example.com
 9pm access allow domain app-name example.com
 9pm access revoke email app-name user@example.com
-9pm access service create app-name --name backend
-9pm access public app-name
+9pm access service create app-name --name backend --switch-mode
+9pm access public app-name --switch-mode
 ```
+
+Changing the access mode decides who can reach the app, so the platform refuses it unless you pass `--switch-mode`. Without the flag nothing changes, and the refusal says what the change would do: who loses access and what happens to the app's custom domains. Moving into service-token mode (`service create` on an app that is not already in it) locks every person out and removes its custom domains; moving back out sets those domains up again with new DNS records the user must publish. Show the user that consequence and get their go-ahead before re-running with `--switch-mode`. Creating a further service token on an app already in service-token mode needs no flag.
 
 ## Environment Variables and Secrets
 
