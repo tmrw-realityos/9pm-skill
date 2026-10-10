@@ -102,7 +102,7 @@ npx skills add tmrw-realityos/9pm-skill --skill 9pm -g
 
 To check for drift without reinstalling, run `9pm doctor` — its `Skill:` line compares the installed copy's `Skill guide stamp` against the public source — or compare this file's stamp line yourself against the copy at `https://raw.githubusercontent.com/tmrw-realityos/9pm-skill/main/skills/9pm/SKILL.md`, the same source the install command uses, trusted by default in sandboxes. Any difference means refresh. (The copy served at `https://9pm.ai/skills/9pm/SKILL.md` tracks platform releases and can briefly lag that source, so don't use it as the freshness reference.)
 
-Skill guide stamp: 2026-10-09.2 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
+Skill guide stamp: 2026-10-10.1 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
 
 ## Sandboxed Environments
 
@@ -405,6 +405,15 @@ If the app uses an external auth/identity provider (Supabase, Auth0, Clerk, Fire
 - **Homepage** (`--spa`): every path with no file serves `index.html` with status 200, so a single-page app that routes in the browser loads on a deep link or a refresh. Every unmatched path gets it, including dotted ones like `/users/jane.smith` and missing files like `/missing.json` - the app's own router has to show its not-found view.
 
 Pass `--spa` for a single-page app with client-side routing (React Router, Vue Router, and similar); a site whose pages are separate `.html` files does not need it, even if it has only one page. The app remembers the choice: a deploy without either flag keeps it, and a deploy that fails to publish does not change it. Apps created before this choice existed keep serving the homepage (the deploy line says "kept from before") until a deploy passes one of the flags. Does not apply to `--bundle` or container apps, which answer every path themselves.
+
+## Going Back to an Earlier Version
+
+If a deploy broke a static or worker app, the owner can put an earlier version back from the dashboard without an agent: the app's page → **Version history** → **Restore this version** on the version they want, then confirm. Offer this when the user asks to undo or roll back a deploy, and point them there rather than redeploying old code by hand.
+
+- A restore publishes a **new** version made from the chosen version's stored code and files, with nothing uploaded again. It becomes the serving version and the history shows it as "Restore of vN"; the newer versions stay in the history, so undoing a restore is another restore.
+- It restores **code and files only**. The app's database and its data, environment variables and secrets, access mode, sign-in, custom domains, user files, address, which files are public, and the missing-pages choice all stay as they are now. A file made private since that version stays private.
+- If a newer version changed the app's database tables, the older code may not work with them. A restore does not undo database changes or recover data.
+- Not offered for the version already serving, for one that never went live, for container apps (not supported yet), or for a version of a different kind than the app runs as now (a static site onto a worker app, or the other way round, or a bundled worker onto an entry-file worker). A version whose files are no longer stored is refused and the app keeps serving what it serves now.
 
 ## Previews and Branches
 
