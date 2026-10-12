@@ -102,7 +102,7 @@ npx skills add tmrw-realityos/9pm-skill --skill 9pm -g
 
 To check for drift without reinstalling, run `9pm doctor` — its `Skill:` line compares the installed copy's `Skill guide stamp` against the public source — or compare this file's stamp line yourself against the copy at `https://raw.githubusercontent.com/tmrw-realityos/9pm-skill/main/skills/9pm/SKILL.md`, the same source the install command uses, trusted by default in sandboxes. Any difference means refresh. (The copy served at `https://9pm.ai/skills/9pm/SKILL.md` tracks platform releases and can briefly lag that source, so don't use it as the freshness reference.)
 
-Skill guide stamp: 2026-10-10.3 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
+Skill guide stamp: 2026-10-12 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
 
 ## Sandboxed Environments
 
@@ -427,6 +427,8 @@ If a deploy broke a static or worker app, the owner can put an earlier version b
 ```
 
 When the intent is to preview unfinished work, default to a separate preview slug and confirm with the user whether they want that or to replace the live app at its existing slug. Delete previews you no longer need with `9pm delete <slug> --confirm <slug>` (the `--confirm` flag is required and must match the slug).
+
+- **On the Free plan there is no separate preview.** On Free, the account's one app slot can't also hold a separate preview app. Deploying to the existing app updates its live version. Before deploying a risky change on Free, tell the user that the deploy updates the live app. Don't offer rehearsal inside the app as a way to try the change: a practice mode rehearses the current app's workflow, and testing a changed version separately requires another app slot. If they want that, suggest a paid plan with more apps (Hobby allows 3) for a separate preview app.
 
 ## Custom Domains
 
