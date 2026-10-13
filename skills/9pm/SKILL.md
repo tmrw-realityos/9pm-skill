@@ -102,7 +102,7 @@ npx skills add tmrw-realityos/9pm-skill --skill 9pm -g
 
 To check for drift without reinstalling, run `9pm doctor` — its `Skill:` line compares the installed copy's `Skill guide stamp` against the public source — or compare this file's stamp line yourself against the copy at `https://raw.githubusercontent.com/tmrw-realityos/9pm-skill/main/skills/9pm/SKILL.md`, the same source the install command uses, trusted by default in sandboxes. Any difference means refresh. (The copy served at `https://9pm.ai/skills/9pm/SKILL.md` tracks platform releases and can briefly lag that source, so don't use it as the freshness reference.)
 
-Skill guide stamp: 2026-10-12 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
+Skill guide stamp: 2026-10-13 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
 
 ## Sandboxed Environments
 
@@ -443,9 +443,9 @@ An app can also answer on a domain the user owns, such as `app.example.com`. Whe
 Add `--owner <organisation>` for an organisation's app. Show the user the records from `add` **verbatim**; they publish them at their registrar or DNS host, not on 9pm. Then run `wait` and act on its exit code:
 
 - `0`: live. The domain serves the app.
-- `10`: timed out while a record is missing, or could not be checked. Have the user compare what they published with `9pm domains status`, then `wait` again.
-- `11`: timed out with every record found. The platform is still finishing; `wait` again, nothing needs changing.
-- `20`: failed or expired. The message says why. `9pm domains check <app> <hostname>` re-reads it; `9pm domains restart <app> <hostname>` starts validation over (the record values may change, so re-publish what it prints); an expired domain is added again with `add`.
+- `10`: timed out with something for the user to do: a record is missing or could not be checked, or a CAA record blocks the certificate (CLI 0.74.0 or later; `status` prints what to change and where). Have the user compare what they published with `9pm domains status`, then `wait` again.
+- `11`: timed out with every record found and nothing for the user to do. The platform is still finishing; `wait` again, nothing needs changing.
+- `20`: failed or expired. The message says why. `9pm domains check <app> <hostname>` re-reads it; if the certificate failed, `9pm domains restart <app> <hostname>` starts validation over (the record values may change, so re-publish what it prints; never restart a domain that is only pending, it does not speed anything up); an expired domain is added again with `add`.
 - `1`: a usage, sign-in or permission error. `add`, `check`, `restart` and `remove` need permission to configure the app; `status` and `wait` only read.
 
 Rules for the records, whichever way they are added:
@@ -459,7 +459,7 @@ Rules for the records, whichever way they are added:
 - **Timing:** once the records are in, the certificate has followed within a few minutes in practice, but DNS can take longer to propagate, so don't promise a time. Use `restart` only when the domain stays stuck after the records are confirmed correct.
 - `9pm domains remove <app> <hostname> --confirm <hostname>` disconnects a domain; it stops serving within seconds.
 
-Without the CLI (or if the user prefers), the same flow is in the dashboard: the app's own page → **Custom domains** → **Add a domain**, with **Re-check** and **Start over** buttons. The account-wide Domains page only lists the domains already added; it has no add form.
+Without the CLI (or if the user prefers), the same flow is in the dashboard: the app's own page → **Custom domains** → **Add a domain**, with **Re-check**, and **Start over** shown only when the certificate failed. The account-wide Domains page only lists the domains already added; it has no add form.
 
 ## First Todo App
 
