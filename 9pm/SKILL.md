@@ -102,7 +102,7 @@ npx skills add tmrw-realityos/9pm-skill --skill 9pm -g
 
 To check for drift without reinstalling, run `9pm doctor` — its `Skill:` line compares the installed copy's `Skill guide stamp` against the public source — or compare this file's stamp line yourself against the copy at `https://raw.githubusercontent.com/tmrw-realityos/9pm-skill/main/skills/9pm/SKILL.md`, the same source the install command uses, trusted by default in sandboxes. Any difference means refresh. (The copy served at `https://9pm.ai/skills/9pm/SKILL.md` tracks platform releases and can briefly lag that source, so don't use it as the freshness reference.)
 
-Skill guide stamp: 2026-10-13 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
+Skill guide stamp: 2026-10-14 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
 
 ## Sandboxed Environments
 
@@ -456,7 +456,8 @@ Rules for the records, whichever way they are added:
 - Enter the **host part exactly as shown** (`app`, `_acme-challenge.app`). Most providers append the domain themselves, so typing the full name doubles it (`app.example.com.example.com`).
 - The two `_acme-challenge` TXT values are **two separate TXT records** with the same name. Add each as its own record and leave any existing TXT records alone.
 - **Never delete MX records, or other TXT records at the root**, to make room: they carry the domain's email and verification.
-- **Timing:** once the records are in, the certificate has followed within a few minutes in practice, but DNS can take longer to propagate, so don't promise a time. Use `restart` only when the domain stays stuck after the records are confirmed correct.
+- **Cached answers:** `status` reads two public resolvers, and both are caches. When they disagree (one shows the value, the other does not), neither proves which is current: a recent change is usually still spreading. Have the user confirm the record at their DNS host, then check again; don't tell them it is done, and don't have them change it. A just-changed record can also show its old value for a few minutes (the row says how long), so check again before changing it twice. When a provider's wildcard record (such as `*.example.com`) answers for a name, the row says to **add** a record at that name; the wildcard can stay, and a TXT value is always added beside the existing ones.
+- **Timing:** once the records are in, the certificate has followed within a few minutes in practice, but DNS can take longer to propagate, so don't promise a time. With every record found, `status` names the platform's next automatic check; wait for it rather than restarting. Use `restart` only when the domain stays stuck after the records are confirmed correct.
 - `9pm domains remove <app> <hostname> --confirm <hostname>` disconnects a domain; it stops serving within seconds.
 
 Without the CLI (or if the user prefers), the same flow is in the dashboard: the app's own page → **Custom domains** → **Add a domain**, with **Re-check**, and **Start over** shown only when the certificate failed. The account-wide Domains page only lists the domains already added; it has no add form.
