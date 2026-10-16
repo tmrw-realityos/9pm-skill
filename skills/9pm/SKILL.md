@@ -102,7 +102,7 @@ npx skills add tmrw-realityos/9pm-skill --skill 9pm -g
 
 To check for drift without reinstalling, run `9pm doctor` — its `Skill:` line compares the installed copy's `Skill guide stamp` against the public source — or compare this file's stamp line yourself against the copy at `https://raw.githubusercontent.com/tmrw-realityos/9pm-skill/main/skills/9pm/SKILL.md`, the same source the install command uses, trusted by default in sandboxes. Any difference means refresh. (The copy served at `https://9pm.ai/skills/9pm/SKILL.md` tracks platform releases and can briefly lag that source, so don't use it as the freshness reference.)
 
-Skill guide stamp: 2026-10-14.2 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
+Skill guide stamp: 2026-10-15 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
 
 ## Sandboxed Environments
 
@@ -547,7 +547,7 @@ Store generated artifacts or share files without handling storage credentials:
 
 ## Delete
 
-`9pm delete` destroys the app, managed database, managed container app, retained image, and project files. Rows are not recoverable. The app's address goes too: an app created again under the same slug gets a new address, so printed links and QR codes stop working. Before running, state this to the user verbatim and get explicit confirmation, even if they already asked for deletion.
+`9pm delete` destroys the app, managed database, managed container app, retained image, and project files. Rows are not recoverable. The app's address goes too: an app created again under the same slug gets a new address, so printed links and QR codes stop working. If `9pm delete` prints `Its address stops serving the app within about a minute.`, relay that. If it does not (a container app, or an app with a custom domain), do not promise any timing: open the address yourself before telling the user the content is gone. Before running, state this to the user verbatim and get explicit confirmation, even if they already asked for deletion.
 
 ```sh
 9pm delete app-name --confirm app-name
