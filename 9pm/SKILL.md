@@ -102,7 +102,7 @@ npx skills add tmrw-realityos/9pm-skill --skill 9pm -g
 
 To check for drift without reinstalling, run `9pm doctor` — its `Skill:` line compares the installed copy's `Skill guide stamp` against the public source — or compare this file's stamp line yourself against the copy at `https://raw.githubusercontent.com/tmrw-realityos/9pm-skill/main/skills/9pm/SKILL.md`, the same source the install command uses, trusted by default in sandboxes. Any difference means refresh. (The copy served at `https://9pm.ai/skills/9pm/SKILL.md` tracks platform releases and can briefly lag that source, so don't use it as the freshness reference.)
 
-Skill guide stamp: 2026-10-20 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
+Skill guide stamp: 2026-10-20.1 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
 
 ## Sandboxed Environments
 
@@ -398,6 +398,8 @@ If the app uses an external auth/identity provider (Supabase, Auth0, Clerk, Fire
 - Deleting the app and creating it again under the same slug gives it a **new** address, because the new app gets a new id. Everything printed with the old one stops working, so do not delete and re-create an app whose address is already out in the world.
 - There is no rename: a different address means a different app.
 - A custom domain the user owns gives the app an address of its own that does not depend on the app's id. See Custom Domains for how to add one; not every plan includes them.
+
+**Making a QR code.** Run `9pm qr <app>` rather than generating one yourself: it saves a printable SVG (`--format png` for an image, `--out <file>` to name it) for the address the app actually serves on, its custom domain when one is live and its 9pm address otherwise. Relay the minimum print width it prints, and any note it adds: a code for a custom domain follows that domain, and scanning a private app's code does not let anyone in. `--terminal` also draws the code in the terminal. Pass `--owner <organisation>` for an organisation's app. If it answers that the server can't make QR codes yet, the platform has not caught up with the CLI; don't fall back to building a URL from the slug.
 
 **Pages that do not exist.** A static site or `--entry` worker app answers a path with no file in one of two ways, and every deploy prints which as a `Missing pages:` line:
 
