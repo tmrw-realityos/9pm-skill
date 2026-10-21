@@ -34,6 +34,21 @@ Authentication paths, in order of preference:
 4. `NINEPM_API_KEY` overrides stored login for CI.
 5. A key for CI or an unattended server is minted from a signed-in machine with `9pm api-key create --name <name>`; the token is printed once, so the user runs this in their own terminal and stores the value themselves. `9pm api-key ls` and `9pm api-key revoke <key-id>` manage them; an account holds at most 10 at a time, login tokens not counted.
 
+### Scoped keys for unattended workers
+
+Prefer a scoped key over a full-access one for any worker that runs unattended, so a leaked key cannot delete the account's other apps. `9pm api-key create --preset <preset>` picks what it may do:
+
+- `monitor` reads app status and deployment history, on the apps named with `--project <app>` (repeat the flag).
+- `deploy` adds deploying, setting environment variables and adding a database, on the `--project` apps.
+- `provision` adds creating apps, inside one automation (`--automation <id>`). Automations group the apps a provision key reaches: `9pm automation create <name>`, `attach <id> <app>`, `detach`, `apps`, `ls`, `rename`, and `rm <id> --yes`, which revokes the automation's keys and keeps its apps. The control plane may answer that provision keys are not available yet; relay that message as it is.
+- `full` (the default) does everything, on every app.
+
+**Deploy permission on an app is effectively access to that app's runtime secrets and data**: a key that can replace an app's code can read anything the app can. Scoping protects the other apps, not the ones a key may deploy to. No scoped key can delete apps, change access, manage domains or files, mint keys or manage automations; those need a full-access login, and creating scoped keys and automations needs one too.
+
+`--expires` sets a fixed deadline, as an ISO 8601 date-time with its zone (`2026-12-31T00:00:00Z`) or a relative `30d` / `12h`, at most a year ahead. It does not replace the inactivity rule: every key lapses after 90 days without use, and a key with `--expires` lapses at whichever comes first. A quiet automation's key can lapse that way and its worker then stops with an "expired" refusal; `9pm login` does not fix that. Recover by minting a replacement from a full-access login with the same preset and apps, or for a provision key for the same automation (its apps are still attached), then revoke the old key.
+
+When a scoped key is refused, the CLI says why. A missing permission is named along with the presets that include it. A "not found" means the app does not exist **or this key does not reach it**: check the key's apps under API keys in the dashboard Settings, or from a CLI signed in with the user's full-access login. `9pm whoami` with a scoped key shows its prefix, preset and expiry rather than the account's plan and usage.
+
 The endpoint defaults to `https://api.9pm.ai` unless the user specifies another. When a command needs it set explicitly:
 
 ```sh
@@ -102,7 +117,7 @@ npx skills add tmrw-realityos/9pm-skill --skill 9pm -g
 
 To check for drift without reinstalling, run `9pm doctor` — its `Skill:` line compares the installed copy's `Skill guide stamp` against the public source — or compare this file's stamp line yourself against the copy at `https://raw.githubusercontent.com/tmrw-realityos/9pm-skill/main/skills/9pm/SKILL.md`, the same source the install command uses, trusted by default in sandboxes. Any difference means refresh. (The copy served at `https://9pm.ai/skills/9pm/SKILL.md` tracks platform releases and can briefly lag that source, so don't use it as the freshness reference.)
 
-Skill guide stamp: 2026-10-21.1 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
+Skill guide stamp: 2026-10-21.2 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
 
 ## Sandboxed Environments
 
