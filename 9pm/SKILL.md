@@ -40,10 +40,10 @@ Prefer a scoped key over a full-access one for any worker that runs unattended, 
 
 - `monitor` reads app status and deployment history, on the apps named with `--project <app>` (repeat the flag).
 - `deploy` adds deploying, setting environment variables and adding a database, on the `--project` apps.
-- `provision` adds creating apps, inside one automation (`--automation <id>`). Automations group the apps a provision key reaches: `9pm automation create <name>`, `attach <id> <app>`, `detach`, `apps`, `ls`, `rename`, and `rm <id> --yes`, which revokes the automation's keys and keeps its apps. The control plane may answer that provision keys are not available yet; relay that message as it is.
+- `provision` adds creating apps, inside one automation (`--automation <id>`). Automations group the apps a provision key reaches: `9pm automation create <name>`, `attach <id> <app>`, `detach`, `apps`, `ls`, `rename`, and `rm <id> --yes`, which revokes the automation's keys and keeps its apps.
 - `full` (the default) does everything, on every app.
 
-**Deploy permission on an app is effectively access to that app's runtime secrets and data**: a key that can replace an app's code can read anything the app can. Scoping protects the other apps, not the ones a key may deploy to. No scoped key can delete apps, change access, manage domains or files, mint keys or manage automations; those need a full-access login, and creating scoped keys and automations needs one too.
+**Deploy permission on an app is effectively access to that app's runtime secrets and data**: a key that can replace an app's code can read anything the app can. Scoping protects the other apps, not the ones a key may deploy to. No scoped key can delete apps, change access, manage domains or files, mint keys, manage automations, act for an organisation (`--owner`) or read an app's logs, databases or analytics; those need a full-access login, and creating scoped keys and automations needs one too. When a worker on a scoped key needs `9pm logs`, ask the user to run it signed in as themselves; do not give the worker a full-access key for it.
 
 `--expires` sets a fixed deadline, as an ISO 8601 date-time with its zone (`2026-12-31T00:00:00Z`) or a relative `30d` / `12h`, at most a year ahead. It does not replace the inactivity rule: every key lapses after 90 days without use, and a key with `--expires` lapses at whichever comes first. A quiet automation's key can lapse that way and its worker then stops with an "expired" refusal; `9pm login` does not fix that. Recover by minting a replacement from a full-access login with the same preset and apps, or for a provision key for the same automation (its apps are still attached), then revoke the old key.
 
@@ -117,7 +117,7 @@ npx skills add tmrw-realityos/9pm-skill --skill 9pm -g
 
 To check for drift without reinstalling, run `9pm doctor` — its `Skill:` line compares the installed copy's `Skill guide stamp` against the public source — or compare this file's stamp line yourself against the copy at `https://raw.githubusercontent.com/tmrw-realityos/9pm-skill/main/skills/9pm/SKILL.md`, the same source the install command uses, trusted by default in sandboxes. Any difference means refresh. (The copy served at `https://9pm.ai/skills/9pm/SKILL.md` tracks platform releases and can briefly lag that source, so don't use it as the freshness reference.)
 
-Skill guide stamp: 2026-10-22.1 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
+Skill guide stamp: 2026-10-22.2 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
 
 ## Sandboxed Environments
 
