@@ -36,6 +36,8 @@ Authentication paths, in order of preference:
 
 ### Scoped keys for unattended workers
 
+For safe replacement of a self-created key, use `9pm api-key rotate <key-id>` from a full-access personal login. The user stores its one-time token in the consumer's secret store, switches and verifies every consumer, then runs `9pm api-key rotation complete <rotation-id> --yes` (revokes the original). `rotation show` inspects it; `rotation cancel` discards the replacement. The overlap is seven days, capped by the original fixed expiry: forgotten completion stops the replacement, not the original. Never keep a token in chat, logs or a plan. On a lost/mismatched reveal, follow the CLI's cleanup outcome; if unconfirmed, inspect `api-key ls` rather than guessing ids or minting again. Older servers have no fallback. Ordinary revoke warns if a replacement survives. To revoke exactly a pair, use `9pm api-key revoke <original-key-id> --both --rotation <rotation-id>`; after compromise review every credential created during the incident, including independent keys.
+
 Prefer a scoped key over a full-access one for any worker that runs unattended, so a leaked key cannot delete the account's other apps. `9pm api-key create --preset <preset>` picks what it may do:
 
 - `monitor` reads app status and deployment history, on the apps named with `--project <app>` (repeat the flag).
@@ -117,7 +119,7 @@ npx skills add tmrw-realityos/9pm-skill --skill 9pm -g
 
 To check for drift without reinstalling, run `9pm doctor` — its `Skill:` line compares the installed copy's `Skill guide stamp` against the public source — or compare this file's stamp line yourself against the copy at `https://raw.githubusercontent.com/tmrw-realityos/9pm-skill/main/skills/9pm/SKILL.md`, the same source the install command uses, trusted by default in sandboxes. Any difference means refresh. (The copy served at `https://9pm.ai/skills/9pm/SKILL.md` tracks platform releases and can briefly lag that source, so don't use it as the freshness reference.)
 
-Skill guide stamp: 2026-10-27.2 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
+Skill guide stamp: 2026-10-27.3 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
 
 ## Sandboxed Environments
 
