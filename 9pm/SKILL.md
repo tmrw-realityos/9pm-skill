@@ -32,7 +32,7 @@ Authentication paths, in order of preference:
 2. A brand-new account is created in the browser, never from the terminal. `9pm signup` cannot create an account, whether public signup is open or not: it refuses immediately (it does not hang waiting for an approval) and prints the next step, which is the sign-up page while public signup is open, or requesting an invite while it is closed. Once the account exists, use `9pm login`. An invite link cannot be redeemed through `9pm signup`; the one-time link in the email is the only way to use it.
 3. User-set environment in their own terminal: `export NINEPM_API_KEY=9pm_...`. Warn that the value can land in shell history.
 4. `NINEPM_API_KEY` overrides stored login for CI.
-5. A key for CI or an unattended server is minted from a signed-in machine with `9pm api-key create --name <name>`; the token is printed once, so the user runs this in their own terminal and stores the value themselves. `9pm api-key ls` and `9pm api-key revoke <key-id>` manage them; an account holds at most 10 at a time, login tokens not counted.
+5. A key for CI or an unattended server is minted from a signed-in machine with `9pm api-key create --name <name>`; the token is printed once, so the user runs this in their own terminal and stores the value themselves. Name it for what will use it (`--name "GitHub Actions nightly deploy"`), at most 64 characters with no control characters or line breaks. `9pm api-key ls`, `9pm api-key rename <key-id> <new-name>` (changes only the name; the token keeps working) and `9pm api-key revoke <key-id>` manage them; an account holds at most 10 at a time, login tokens not counted.
 
 ### Scoped keys for unattended workers
 
@@ -119,7 +119,7 @@ npx skills add tmrw-realityos/9pm-skill --skill 9pm -g
 
 To check for drift without reinstalling, run `9pm doctor` — its `Skill:` line compares the installed copy's `Skill guide stamp` against the public source — or compare this file's stamp line yourself against the copy at `https://raw.githubusercontent.com/tmrw-realityos/9pm-skill/main/skills/9pm/SKILL.md`, the same source the install command uses, trusted by default in sandboxes. Any difference means refresh. (The copy served at `https://9pm.ai/skills/9pm/SKILL.md` tracks platform releases and can briefly lag that source, so don't use it as the freshness reference.)
 
-Skill guide stamp: 2026-10-29.2 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
+Skill guide stamp: 2026-10-29.3 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
 
 ## Sandboxed Environments
 
