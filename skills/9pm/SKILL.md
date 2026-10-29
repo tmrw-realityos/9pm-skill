@@ -119,7 +119,7 @@ npx skills add tmrw-realityos/9pm-skill --skill 9pm -g
 
 To check for drift without reinstalling, run `9pm doctor` — its `Skill:` line compares the installed copy's `Skill guide stamp` against the public source — or compare this file's stamp line yourself against the copy at `https://raw.githubusercontent.com/tmrw-realityos/9pm-skill/main/skills/9pm/SKILL.md`, the same source the install command uses, trusted by default in sandboxes. Any difference means refresh. (The copy served at `https://9pm.ai/skills/9pm/SKILL.md` tracks platform releases and can briefly lag that source, so don't use it as the freshness reference.)
 
-Skill guide stamp: 2026-10-29.1 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
+Skill guide stamp: 2026-10-29.2 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
 
 ## Sandboxed Environments
 
@@ -472,6 +472,7 @@ Rules for the records, whichever way they are added:
 - **Plan:** not on the Free plan. If `add` or the dashboard says custom domains aren't included, that is the plan, not a fault. Service-token apps (`private_service`) cannot have one.
 - A **subdomain** (`app.example.com`, `www.example.com`) gets a CNAME to the value shown.
 - A **root domain** (`example.com`) cannot take a CNAME; `9pm domains` shows it as `ALIAS / ANAME` (or, for a DNS host it recognises, that host's own name for it): it needs the provider's ALIAS, ANAME or CNAME-flattening record. Some providers (for example GoDaddy, or Route 53 for a target outside AWS) have no record that works, so use `www.` or another subdomain there. A correct ALIAS answers with addresses rather than the target name, so its row follows the platform's routing check.
+- **Root and `www`:** after the user adds a root domain or its `www`, offer to add the other one too (`add` prints the command from CLI 0.105.0 when it applies), say it counts as a separate custom domain on their plan, and never add it without asking.
 - Enter the **host part exactly as shown** (`app`, `_acme-challenge.app`). Most providers append the domain themselves, so typing the full name doubles it (`app.example.com.example.com`).
 - The two `_acme-challenge` TXT values are **two separate TXT records** with the same name. Add each as its own record and leave any existing TXT records alone.
 - **Never delete MX records, or other TXT records at the root**, to make room: they carry the domain's email and verification.
