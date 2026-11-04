@@ -119,7 +119,7 @@ npx skills add tmrw-realityos/9pm-skill --skill 9pm -g
 
 To check for drift without reinstalling, run `9pm doctor` — its `Skill:` line compares the installed copy's `Skill guide stamp` against the public source — or compare this file's stamp line yourself against the copy at `https://raw.githubusercontent.com/tmrw-realityos/9pm-skill/main/skills/9pm/SKILL.md`, the same source the install command uses, trusted by default in sandboxes. Any difference means refresh. (The copy served at `https://9pm.ai/skills/9pm/SKILL.md` tracks platform releases and can briefly lag that source, so don't use it as the freshness reference.)
 
-Skill guide stamp: 2026-11-03.2 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
+Skill guide stamp: 2026-11-04.1 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
 
 ## Sandboxed Environments
 
@@ -373,9 +373,13 @@ When one URL equals one private workspace (a shared board, doc, or the todo demo
 ```sh
 9pm deploy ./app --check --runtime container --port 8080
 9pm deploy ./app --name "App Name" --slug app-name --runtime container --port 8080 --health-path /health --region auto
+# The same image for another app (no Docker, no build, no upload): use the `Image: sha256:...` digest the deploy printed
+9pm deploy --name "Customer B" --slug customer-b --image sha256:<digest> --port 8080 --health-path /health
 ```
 
    For persistence, see the Persistence section: prefer `--volume <gb>` (mounts at `/data`) to keep an app's existing local database where it is enabled, and fall back to `--with-db` (managed SQL — the app reads `NINEPM_SQL_URL` and `NINEPM_DB_BINDINGS` for the bridge) when a volume is unavailable or the app has no disk of its own. If deployment is blocked by image size, report whether it hit the per-app image limit, account retained-image quota, or platform capacity. Report `queued`, `publishing`, `active`, or `failed` exactly as printed by the CLI.
+
+   One image for many apps (one per customer, region or environment): build and deploy it once, then deploy each further app with `--image <digest>`. Each app keeps its own env, disk, placement and access; the image is stored and counted against the quota once. `9pm images ls` shows the account's images and which apps use each. A digest only works in the account that published it, and `--image` needs no Docker, so it works from a sandbox or another app's backend.
 
    Container readiness checklist: Dockerfile present, HTTP server binds to `0.0.0.0` and reads its listen port from the `PORT` environment variable (`--port` selects the public port; the platform may hand the app a different one through `PORT`), optional health endpoint returns 2xx, persistent state uses an attached `--volume` (writing to `/data`) or managed SQL, and secrets are not baked into the image — set them with `9pm env` instead. A failing health endpoint should answer 500 (or any error other than 502/503): the platform reserves 502/503 for its own "machine not up" signal, so on placements that stop idle apps a health check answering those reads as the machine waking, not as a verdict about the app.
 
