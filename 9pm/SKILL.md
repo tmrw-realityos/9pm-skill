@@ -28,7 +28,7 @@ This chat agent has no secure secret input. Anything pasted into the conversatio
 
 Authentication paths, in order of preference:
 
-1. `9pm login` for an existing account — including one the user just created from an invite email. Device-code flow; the token is stored in native protected storage. Plaintext file storage is opt-in only when native storage is unavailable. The agent never sees the key. Running `9pm login` again keeps a stored credential that still works instead of creating another; `9pm login --fresh` replaces it and revokes the old one.
+1. `9pm login` for an existing account — including one the user just created from an invite email. Device-code flow; the token is stored in native protected storage. Plaintext file storage is opt-in only when native storage is unavailable. The agent never sees the key. Running `9pm login` again keeps a stored credential that still works instead of creating another; `9pm login --fresh` replaces it and revokes the old one. The printed approval link is valid for 10 minutes; when the user may not get to it that soon (they are away from the screen, or approving on another device later), run `9pm login --link-valid 1h` so the same link works for an hour instead of starting over. The CLI prints the deadline, and it keeps waiting until the link is approved or lapses, so run it where a long wait is not cut off (for example as a background command), not in a call that times out first. Use the one-hour link only when it is needed: only approve a link you started yourself.
 2. A brand-new account is created in the browser, never from the terminal. `9pm signup` cannot create an account, whether public signup is open or not: it refuses immediately (it does not hang waiting for an approval) and prints the next step, which is the sign-up page while public signup is open, or requesting an invite while it is closed. Once the account exists, use `9pm login`. An invite link cannot be redeemed through `9pm signup`; the one-time link in the email is the only way to use it.
 3. User-set environment in their own terminal: `export NINEPM_API_KEY=9pm_...`. Warn that the value can land in shell history.
 4. `NINEPM_API_KEY` overrides stored login for CI.
@@ -119,7 +119,7 @@ npx skills add tmrw-realityos/9pm-skill --skill 9pm -g
 
 To check for drift without reinstalling, run `9pm doctor` — its `Skill:` line compares the installed copy's `Skill guide stamp` against the public source — or compare this file's stamp line yourself against the copy at `https://raw.githubusercontent.com/tmrw-realityos/9pm-skill/main/skills/9pm/SKILL.md`, the same source the install command uses, trusted by default in sandboxes. Any difference means refresh. (The copy served at `https://9pm.ai/skills/9pm/SKILL.md` tracks platform releases and can briefly lag that source, so don't use it as the freshness reference.)
 
-Skill guide stamp: 2026-11-16.1 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
+Skill guide stamp: 2026-11-18.1 <!-- Bump on every material change to skill/*.md guidance: new date, or increment the .N serial for a further change on the same day. Agents treat any mismatch with the public source copy as a stale install. -->
 
 ## Sandboxed Environments
 
